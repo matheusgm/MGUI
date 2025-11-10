@@ -35,8 +35,8 @@ namespace gui
 		int totalElements();
 
 		// Modifier
-		void setPosition(const float x, const float y) override;
-		void setSize(const float width, const float height) override;
+		void setPosition(float x, float y) override;
+		void setSize(float width, float height) override;
 
 		// Herdado por meio de BaseGui
 		void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
