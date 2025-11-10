@@ -45,10 +45,11 @@ sf::Font &gui::Button::loadFont(sf::Font *font)
 		return *font;
 
 	if (!defaultFont)
+	{
 		defaultFont = std::make_unique<sf::Font>();
-
-	if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
-		throw std::runtime_error("Failed to load default font!");
+		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
+			throw std::runtime_error("Failed to load default font!");
+	}
 
 	return *defaultFont;
 }

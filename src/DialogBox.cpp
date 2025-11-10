@@ -3,31 +3,37 @@
 
 std::unique_ptr<sf::Font> gui::DialogBox::defaultFont;
 
-gui::DialogBox::DialogBox(float x, float y, float width, float height, std::map<std::string, gui::Button *> buttons)
-	: BaseGui(sf::Vector2f(x, y), sf::Vector2f(width, height)),
+gui::DialogBox::DialogBox(float x, float y, float width, float height)
+	: BaseGui({x, y}, {width, height}),
 	  text(loadFont())
 {
 	// Shape
-	this->shape.setFillColor(sf::Color::Red);
-	this->shape.setOutlineThickness(1.f);
-	this->shape.setOutlineColor(sf::Color::Black);
+	shape.setPosition({x, y});
+	shape.setSize({width, height});
+	shape.setFillColor(sf::Color::Red);
+	shape.setOutlineThickness(1.f);
+	shape.setOutlineColor(sf::Color::Black);
 
 	// Text
-	this->text.setFillColor(sf::Color::Black);
-	this->text.setCharacterSize(24U);
-
-	this->setSize(width, height);
-	this->setPosition(x, y);
+	text.setFillColor(sf::Color::Black);
+	text.setCharacterSize(24U);
 
 	// Close Button
-	this->closeButton = gui::Button(
-		this->getLeft() + 10.f, this->getBottom() - 35.f,
+	closeButton = gui::Button(
+		getLeft() + 10.f, getBottom() - 35.f,
 		100.f, 25.f, "Close", 16U);
+
+	setPosition(x, y);
 }
+
+void gui::DialogBox::updateText(const std::string &textStr)
+{
+	text.setString(textStr);
+};
 
 sf::Font &gui::DialogBox::loadFont()
 {
-	if (defaultFont == nullptr)
+	if (!defaultFont)
 	{
 		defaultFont = std::make_unique<sf::Font>();
 		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
@@ -57,48 +63,49 @@ sf::Font &gui::DialogBox::loadFont()
 //	return new DialogBox(x, y, w, h, buttons);
 // }
 
-void gui::DialogBox::setPosition(const float x, const float y)
+void gui::DialogBox::setPosition(float x, float y)
 {
-	this->shape.setPosition(sf::Vector2f(x, y));
+	BaseGui::setPosition(x, y);
+	shape.setPosition(getPosition());
 
-	this->text.setPosition({this->getLeft() + 20.f, this->getTop() + 20.f});
+	text.setOrigin({-20.f, -20.f});
+	text.setPosition({getLeft(), getTop()});
+
+	closeButton.setPosition(getLeft() + 10.f, getBottom() - 35.f);
 }
 
-void gui::DialogBox::setSize(const float width, const float height)
+void gui::DialogBox::setSize(float width, float height)
 {
-	this->shape.setSize(sf::Vector2f(width, height));
+	BaseGui::setSize(width, height);
+	shape.setSize(getSize());
+	setPosition(getLeft(), getTop());
 }
 
-void gui::DialogBox::loadNode(std::shared_ptr<DialogNode> node)
+void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
 {
-	message = node->message;
-	currentIndex = 0;
 	dialogType = node->type;
-	updateText();
+	updateText(node->message);
 
 	buttons.clear();
+	buttons.reserve(node->options.size());
 
-	for (const auto &option : node->options)
+	constexpr float btnWidth = 100.f;
+	constexpr float btnHeight = 30.f;
+	constexpr float btnSpacing = 10.f;
+	constexpr float margin = 10.f;
+
+	const float totalWidth = node->options.size() * (btnWidth + btnSpacing) - btnSpacing;
+
+	float x = shape.getPosition().x + shape.getSize().x - totalWidth - margin;
+	float y = shape.getPosition().y + shape.getSize().y - btnHeight - margin;
+
+	for (const auto &[label, _] : node->options)
 	{
-		const std::string &label = option.first;
-		gui::Button btn(0.f, 0.f, 100.f, 30.f, label);
+		gui::Button btn(x, y, btnWidth, btnHeight, label);
 		btn.onPressed([this, label]()
-					  {
-			if (choiceCallback) choiceCallback(label); });
-		buttons.push_back(btn);
-	}
-}
-
-void gui::DialogBox::setChoiceCallback(std::function<void(const std::string &)> callback)
-{
-	choiceCallback = callback;
-}
-
-void gui::DialogBox::updateText()
-{
-	if (message.size() > 0)
-	{
-		text.setString(message);
+					  { if (choiceCallback) choiceCallback(label); });
+		buttons.emplace_back(std::move(btn));
+		x += btnWidth + btnSpacing;
 	}
 }
 
@@ -106,36 +113,40 @@ void gui::DialogBox::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mouseP
 {
 	closeButton.updateEvents(sfEvent, mousePos);
 
-	for (auto &btn : this->buttons)
-	{
+	for (auto &btn : buttons)
 		btn.updateEvents(sfEvent, mousePos);
-	}
 }
 
 void gui::DialogBox::update(const sf::Vector2f &mousePos)
 {
 	closeButton.update(mousePos);
 
-	for (auto &btn : this->buttons)
-	{
+	for (auto &btn : buttons)
 		btn.update(mousePos);
-	}
 }
 
 void gui::DialogBox::render(sf::RenderTarget &target)
 {
-	target.draw(this->shape);
-	target.draw(this->text);
+	target.draw(shape);
+	target.draw(text);
 
 	closeButton.render(target);
 
-	float x = this->shape.getPosition().x + this->shape.getSize().x - (buttons.size() * 110);
-	float y = this->shape.getPosition().y + this->shape.getSize().y - 40;
-
-	for (auto &btn : this->buttons)
-	{
-		btn.setPosition(x, y);
+	for (auto &btn : buttons)
 		btn.render(target);
-		x += 110;
-	}
+
+	// sf::Vertex verticalLine[2];
+	// verticalLine[0].position = sf::Vector2f(150.f, 0.f);
+	// verticalLine[0].color = sf::Color::Red;
+	// verticalLine[1].position = sf::Vector2f(150.f, 800.f);
+	// verticalLine[1].color = sf::Color::Red;
+
+	// sf::Vertex horizontalLine[2];
+	// horizontalLine[0].position = sf::Vector2f(0.f, 200.f);
+	// horizontalLine[0].color = sf::Color::Blue;
+	// horizontalLine[1].position = sf::Vector2f(1200.f, 200.f);
+	// horizontalLine[1].color = sf::Color::Blue;
+
+	// target.draw(verticalLine, 2, sf::PrimitiveType::Lines);
+	// target.draw(horizontalLine, 2, sf::PrimitiveType::Lines);
 }

@@ -5,40 +5,39 @@
 
 namespace gui
 {
-    class DialogBox :
-        public BaseGui
+    class DialogBox : public BaseGui
     {
     private:
         sf::RectangleShape shape;
         sf::Text text;
-        std::string message;
-        size_t currentIndex = 0;
+
         static std::unique_ptr<sf::Font> defaultFont;
 
         std::vector<gui::Button> buttons;
         Button closeButton;
-        DialogType dialogType;
-        std::function<void(const std::string&)> choiceCallback;
 
-        void updateText();
+        DialogType dialogType = DialogType::OK;
+
+        std::function<void(const std::string &)> choiceCallback = [](const std::string &) {};
+
+        // Helpers
+        void updateText(const std::string &textStr);
+        static sf::Font &loadFont();
 
     public:
-        DialogBox(float x, float y, float width, float height, std::map<std::string, gui::Button*> buttons = {});
-        virtual ~DialogBox() = default;;
-        
-        static sf::Font& loadFont();
+        DialogBox(float x, float y, float width, float height);
+        virtual ~DialogBox() = default;
 
-        void loadNode(std::shared_ptr<DialogNode> node);
-        void setChoiceCallback(std::function<void(const std::string&)> callback);
+        void loadNode(const std::shared_ptr<DialogNode>& node);
+        void setChoiceCallback(std::function<void(const std::string &)> callback) { choiceCallback = std::move(callback); };
 
         // Modifier
-        void setPosition(const float x, const float y) override;
-        void setSize(const float width, const float height) override;
+        void setPosition(float x, float y) override;
+        void setSize(float width, float height) override;
 
         // Herdado por meio de BaseGui
-        void updateEvents(sf::Event& sfEvent, const sf::Vector2f& mousePos) override;
-        void update(const sf::Vector2f& mousePos) override;
-        void render(sf::RenderTarget& target) override;
+        void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
+        void update(const sf::Vector2f &mousePos) override;
+        void render(sf::RenderTarget &target) override;
     };
 }
-

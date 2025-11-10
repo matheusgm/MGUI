@@ -37,7 +37,7 @@ void DialogBoxState::initGui()
 
 	// DIALOG BOX ====================================
 
-	// Criar n�s
+	// Criar nós
 	auto root = std::make_shared<DialogNode>();
 	root->message = "Voce encontrou um bau misterioso.";
 	root->type = DialogType::YesNo;
