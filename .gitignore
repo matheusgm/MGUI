@@ -1,0 +1,83 @@
+# ==========================
+# OS generated files
+# ==========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ==========================
+# VSCode
+# ==========================
+.vscode/
+.vscode/*
+
+# ==========================
+# C++ / Build
+# ==========================
+# Compiled object files
+*.o
+*.obj
+
+# Compiled static libraries
+*.lib
+*.a
+
+# Compiled dynamic libraries
+*.dll
+*.so
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# ==========================
+# CMake
+# ==========================
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+build/
+Debug/
+Release/
+x64/
+*.dir/
+
+# ==========================
+# SFML / External libraries
+# ==========================
+# You may ignore the folder where SFML binaries or includes are copied
+# Example: if you have SFML in a "libs/" folder in the project
+include/
+
+# ==========================
+# Logs / temporary files
+# ==========================
+*.log
+*.tmp
+*.temp
+
+# ==========================
+# Other
+# ==========================
+# JetBrains IDEs
+.idea/
+*.iml
+
+# Backup files
+*.bak
+*.swp
+

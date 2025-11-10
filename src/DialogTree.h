@@ -1,0 +1,17 @@
+#pragma once
+
+#include "DialogNode.h"
+
+namespace gui {
+	class DialogTree {
+	public:
+		DialogTree(std::shared_ptr<DialogNode> root);
+
+		void choose(const std::string& label);
+		std::shared_ptr<DialogNode> current() const;
+
+	private:
+		std::shared_ptr<DialogNode> currentNode;
+	};
+
+}
