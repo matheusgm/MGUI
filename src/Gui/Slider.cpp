@@ -2,141 +2,117 @@
 #include "Slider.h"
 
 gui::Slider::Slider(float x, float y, float width, float height,
-	int min_value, int max_value, int default_value, int step,
-	sf::Color background_color, sf::Color foreground_color, sf::Color indicator_color
-) : BaseGui(sf::Vector2f(x, y), sf::Vector2f(width, height))
+					int min_value, int max_value, int default_value, int step,
+					sf::Color background_color, sf::Color foreground_color, sf::Color indicator_color) : BaseGui({x, y}, {width, height}),
+																										 step(step),
+																										 minValue(min_value),
+																										 maxValue(max_value),
+																										 value(default_value)
 {
-	this->minValue = min_value;
-	this->maxValue = max_value;
-	this->value = default_value;
-	if (default_value == 0 || default_value < this->minValue) {
-		this->value = this->minValue;
-	}
-	else if (default_value > this->maxValue)
-	{
-		this->value = this->maxValue;
-	}
-
-	this->step = step;
-	this->indicatorPressed = false;
-	this->onValueChangeCallback = [] {};
-
 	// Background Shape
-	this->backgroundShape.setFillColor(background_color);
-	this->backgroundShape.setOutlineThickness(1.f);
-	this->backgroundShape.setOutlineColor(sf::Color::Black);
+	backgroundShape.setFillColor(background_color);
+	backgroundShape.setOutlineThickness(1.f);
+	backgroundShape.setOutlineColor(sf::Color::Black);
 
 	// Foreground Shape
-	this->foregroundShape.setFillColor(foreground_color);
+	foregroundShape.setFillColor(foreground_color);
 
 	// Indicator
-	this->indicatorShape.setRadius(height * 0.7f);
-	this->indicatorShape.setFillColor(indicator_color);
-	this->indicatorShape.setOutlineThickness(1.f);
-	this->indicatorShape.setOutlineColor(sf::Color::Black);
+	indicatorShape.setRadius(height * 0.7f);
+	indicatorShape.setFillColor(indicator_color);
+	indicatorShape.setOutlineThickness(1.f);
+	indicatorShape.setOutlineColor(sf::Color::Black);
 
-	this->setSize(width, height);
-	this->setPosition(x, y);
+	setSize(width, height);
+	setPosition(x, y);
 }
 
-const int gui::Slider::getValue() const
-{
-	return this->value;
-}
-
-void gui::Slider::setPosition(const float x, const float y)
+void gui::Slider::setPosition(float x, float y)
 {
 	BaseGui::setPosition(x, y);
 
-	this->backgroundShape.setPosition(this->getPosition());
-	this->foregroundShape.setPosition(this->getPosition());
+	backgroundShape.setPosition(getPosition());
+	foregroundShape.setPosition(getPosition());
 
-	// Mudar ao deslocar o indicator
-	this->updateIndicator();
+	updateIndicatorPosition();
 }
 
-void gui::Slider::setSize(const float width, const float height)
+void gui::Slider::setSize(float width, float height)
 {
 	BaseGui::setSize(width, height);
 
-	this->backgroundShape.setSize(this->getSize());
+	backgroundShape.setSize(getSize());
 
-	// Mudar ao deslocar o indicator
-	this->updateIndicator();
+	updateIndicatorPosition();
 }
 
-void gui::Slider::onValueChange(std::function<void()> callback)
+void gui::Slider::updateIndicatorPosition()
 {
-	this->onValueChangeCallback = callback;
+	float range = std::max(1, maxValue - minValue);
+	float perc = float(value - minValue) / float(range);
+	perc = std::clamp(perc, 0.f, 1.f);
+
+	foregroundShape.setSize({getSize().x * perc, getSize().y});
+
+	indicatorShape.setPosition(
+		{getPosition().x - (indicatorShape.getGlobalBounds().size.x / 2.f) + (getSize().x * perc),
+		 getPosition().y + (getSize().y / 2.f) - (indicatorShape.getGlobalBounds().size.y / 2.f)});
 }
 
-void gui::Slider::updateIndicator()
+void gui::Slider::handleDrag(const sf::Vector2f &mousePos)
 {
-	float value_perc = static_cast<float>(this->value - this->minValue) / static_cast<float>(this->maxValue - this->minValue);
+	float trackLeft = getPosition().x;
+	float trackWidth = getSize().x;
 
-	this->foregroundShape.setSize(sf::Vector2f(this->getSize().x * value_perc, this->getSize().y));
+	float newX = mousePos.x - dragOffsetX;
+	newX = std::clamp(newX, trackLeft, trackLeft + trackWidth);
 
-	this->indicatorShape.setPosition(
-		sf::Vector2f(
-			this->getPosition().x - (this->indicatorShape.getGlobalBounds().size.x / 2.f) + (this->getSize().x * value_perc),
-			this->getPosition().y + (this->getSize().y / 2.f) - (this->indicatorShape.getGlobalBounds().size.y / 2.f)
-		)
-	);
+	float perc = (newX - trackLeft) / trackWidth;
+	int range = std::max(1, maxValue - minValue);
+	int newVal = minValue + static_cast<int>(perc * range);
+
+	if (newVal != value)
+	{
+		value = newVal;
+		updateIndicatorPosition();
+		if (onValueChangeCallback)
+			onValueChangeCallback();
+	}
 }
 
-void gui::Slider::updateEvents(sf::Event& sfEvent, const sf::Vector2f& mousePos)
+void gui::Slider::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
-	if (this->indicatorShape.getGlobalBounds().contains(mousePos)) {
+	if (indicatorShape.getGlobalBounds().contains(mousePos))
+	{
 		if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseButtonPressed>())
 		{
 			if (mouseEvent->button == sf::Mouse::Button::Left)
 			{
-				this->indicatorPressed = true;
+				indicatorPressed = true;
+				dragOffsetX = mousePos.x - indicatorShape.getPosition().x;
 			}
 		}
 	}
 
-	if (this->indicatorPressed)
+	if (indicatorPressed)
 	{
 		if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseButtonReleased>())
 		{
 			if (mouseEvent->button == sf::Mouse::Button::Left)
-			{
-				this->indicatorPressed = false;
-			}
+				indicatorPressed = false;
 		}
 		else if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseMoved>())
-		{
-			float interval_size = (this->getSize().x / (static_cast<float>(this->maxValue - this->minValue) / this->step));
-			float local_mouse_x = mousePos.x - this->getPosition().x + (interval_size / 2.f);
-
-			if (local_mouse_x <= 0.f)
-				local_mouse_x = 0.f;
-			else if (local_mouse_x >= this->getSize().x)
-				local_mouse_x = this->getSize().x;
-
-			int new_val = static_cast<int>(local_mouse_x / interval_size) * this->step + this->minValue;
-
-			// Only update if the value changes
-			if (new_val != this->value)
-			{
-				this->value = new_val;
-				this->updateIndicator();
-				this->onValueChangeCallback();
-			}
-		}
+			handleDrag(mousePos);
 	}
 }
 
-void gui::Slider::update(const sf::Vector2f& mousePos)
+void gui::Slider::update(const sf::Vector2f &mousePos)
 {
-
 }
 
-void gui::Slider::render(sf::RenderTarget& target)
+void gui::Slider::render(sf::RenderTarget &target)
 {
-	target.draw(this->backgroundShape);
-	target.draw(this->foregroundShape);
-
-	target.draw(this->indicatorShape);
+	target.draw(backgroundShape);
+	target.draw(foregroundShape);
+	target.draw(indicatorShape);
 }
