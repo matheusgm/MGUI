@@ -2,7 +2,7 @@
 #include "ListView.h"
 
 gui::ListView::ListView(float x, float y, float width, float maxHeight)
-	: BaseGui(sf::Vector2f(x, y), sf::Vector2f(width, maxHeight))
+	: BaseGui({x, y}, {width, maxHeight})
 {
 	backgroundShape.setFillColor(sf::Color::Yellow);
 	backgroundShape.setOutlineThickness(1.f);
@@ -13,11 +13,6 @@ gui::ListView::ListView(float x, float y, float width, float maxHeight)
 
 	setSize(getWidth(), getHeight());
 	setPosition(getLeft(), getTop());
-}
-
-gui::ListView::~ListView()
-{
-	delete scroll;
 }
 
 int gui::ListView::elementsInside()
@@ -34,27 +29,27 @@ int gui::ListView::elementsOutside()
 }
 void gui::ListView::initElements()
 {
-	elements.push_back(new ListItem());
-	Button *btn = new Button();
+	elements.push_back(std::make_unique<ListItem>());
+	auto btn = std::make_unique<Button>();
 	btn->onPressed(
 		[this]
 		{
 			cout << "oi" << endl;
 		});
-	elements.push_back(btn);
-	elements.push_back(new ListItem());
-	elements.push_back(new ListItem());
-	elements.push_back(new ListItem());
-	elements.push_back(new ListItem());
-	elements.push_back(new ListItem(sf::Color::Blue));
-	elements.push_back(new ListItem(sf::Color::White));
-	elements.push_back(new ListItem(sf::Color::Magenta));
-	elements.push_back(new ListItem(sf::Color::Green));
-	elements.push_back(new ListItem());
-	// elements.push_back(new ListItem());
-	// elements.push_back(new ListItem());
-	// elements.push_back(new ListItem());
-	// elements.push_back(new ListItem());
+	elements.push_back(std::unique_ptr<BaseGui>(btn.release()));
+	elements.push_back(std::make_unique<ListItem>());
+	elements.push_back(std::make_unique<ListItem>());
+	elements.push_back(std::make_unique<ListItem>());
+	elements.push_back(std::make_unique<ListItem>());
+	elements.push_back(std::make_unique<ListItem>(sf::Color::Blue));
+	elements.push_back(std::make_unique<ListItem>(sf::Color::White));
+	elements.push_back(std::make_unique<ListItem>(sf::Color::Magenta));
+	elements.push_back(std::make_unique<ListItem>(sf::Color::Green));
+	elements.push_back(std::make_unique<ListItem>());
+	// elements.push_back(std::make_unique<ListItem>);
+	// elements.push_back(std::make_unique<ListItem>);
+	// elements.push_back(std::make_unique<ListItem>);
+	// elements.push_back(std::make_unique<ListItem>);
 }
 
 void gui::ListView::initScroll()
@@ -64,7 +59,7 @@ void gui::ListView::initScroll()
 
 	if (elementosFora > 0)
 	{
-		scroll = new Scroll(getRight() - scrollbarWidth, getTop(), scrollbarWidth, getHeight());
+		scroll = std::make_unique<Scroll>(getRight() - scrollbarWidth, getTop(), scrollbarWidth, getHeight());
 		scroll->setMaxValue(elementosFora);
 		scroll->setIndicatorHeight((elementosDentro / (float)totalElements()) * scroll->getHeight());
 		scroll->onValueChange(
@@ -94,11 +89,6 @@ void gui::ListView::setListItemPosition(int value)
 	}
 }
 
-int gui::ListView::totalElements()
-{
-	return elements.size();
-}
-
 void gui::ListView::setPosition(float x, float y)
 {
 	BaseGui::setPosition(x, y);
@@ -117,14 +107,12 @@ void gui::ListView::setSize(float width, float height)
 	if (!elements.empty() && elementsOutside() <= 0)
 		BaseGui::setSize(width, elementHeight * totalElements());
 
-	backgroundShape.setSize(sf::Vector2f(getWidth() - scrollbarWidth, getHeight()));
+	backgroundShape.setSize({getWidth() - scrollbarWidth, getHeight()});
 	if (scroll)
 		scroll->setSize(scroll->getWidth(), getHeight());
 
 	for (auto &it : elements)
-	{
 		it->setSize(backgroundShape.getSize().x, elementHeight);
-	}
 }
 
 void gui::ListView::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
@@ -166,14 +154,14 @@ void gui::ListView::render(sf::RenderTarget &target)
 
 	sf::View oldView = target.getView();
 
-	renderView.setViewport(sf::FloatRect({getLeft(), getTop()}, {getWidth(), getHeight()}));
+	sf::View renderView(sf::FloatRect({getLeft(), getTop()}, {getWidth(), getHeight()}));
 
-	sf::FloatRect panelRect({getLeft() / target.getSize().x,
-							 (getTop()) / target.getSize().y},
-							{(getWidth()) / target.getSize().x,
-							 (getHeight()) / target.getSize().y});
+	sf::FloatRect viewport({getLeft() / target.getSize().x,
+							(getTop()) / target.getSize().y},
+						   {(getWidth()) / target.getSize().x,
+							(getHeight()) / target.getSize().y});
 
-	renderView.setViewport(panelRect);
+	renderView.setViewport(viewport);
 
 	target.setView(renderView);
 

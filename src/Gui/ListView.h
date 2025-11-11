@@ -12,10 +12,10 @@ namespace gui
 		sf::View renderView;
 		sf::RectangleShape backgroundShape;
 
-		Scroll *scroll;
+		std::unique_ptr<Scroll> scroll;
 		float scrollbarWidth = 10.f;
 
-		vector<BaseGui *> elements;
+		vector<std::unique_ptr<BaseGui>> elements;
 		float elementHeight = 50.f;
 
 		int elementsInside();
@@ -23,7 +23,7 @@ namespace gui
 
 	public:
 		ListView(float x, float y, float width, float height);
-		virtual ~ListView();
+		virtual ~ListView() = default;
 
 		void initElements();
 		void initScroll();
@@ -32,7 +32,7 @@ namespace gui
 		void removeListItem(int pos);
 		void setListItemPosition(int value);
 
-		int totalElements();
+		int totalElements() const { return elements.size(); };
 
 		// Modifier
 		void setPosition(float x, float y) override;

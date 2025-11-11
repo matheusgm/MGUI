@@ -9,7 +9,7 @@ namespace gui
         // sf::Text text;
 
         ListItem(sf::Color color = sf::Color::Red);
-        virtual ~ListItem() = default;;
+        virtual ~ListItem() = default;
 
         void setPosition(float x, float y) override;
         void setSize(float x, float y) override;
