@@ -4,17 +4,13 @@
 
 namespace gui
 {
-    class ListViewItem
+    class ListViewItem : public GuiElement
     {
     public:
-        ListViewItem() = default;
+        ListViewItem();
         virtual ~ListViewItem() = default;
 
         template <typename T>
         void updateWithData(const T &data, size_t index);
-
-        virtual void setPosition(const float x, const float y) = 0;
-
-        virtual void render(sf::RenderTarget &target) = 0;
     };
 }

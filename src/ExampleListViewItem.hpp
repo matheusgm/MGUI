@@ -12,7 +12,8 @@ public:
 
     void updateWithData(const Example &data, size_t index);
 
-    void render(sf::RenderTarget &target) override;
-
     void setPosition(const float x, const float y) override;
+    void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos);
+    void update(const sf::Vector2f &mousePos);
+    void render(sf::RenderTarget &target);
 };

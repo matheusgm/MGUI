@@ -1,7 +1,7 @@
 #include "../stdafx.h"
 #include "ListView.hpp"
 
-gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, std::unique_ptr<const ListViewAdapterContract> adapter)
+gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, std::unique_ptr<const IListViewAdapter> adapter)
 	: GuiElement(position, size), m_adapter(std::move(adapter)), m_viewport(position, size)
 {
 	m_background.setPosition(position);

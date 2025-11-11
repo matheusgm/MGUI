@@ -6,10 +6,10 @@
 
 namespace gui
 {
-    class ListViewAdapterContract
+    class IListViewAdapter
     {
     public:
-        virtual ~ListViewAdapterContract() = default;
+        virtual ~IListViewAdapter() = default;
 
         virtual size_t getItemCount() const = 0;
         virtual float getItemHeight() const = 0;

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "./ListViewAdapterContract.hpp"
+#include "./IListViewAdapter.hpp"
 #include <vector>
 #include <type_traits>
 
 namespace gui
 {
     template <typename T, typename U>
-    class ListViewAdapter : public ListViewAdapterContract
+    class ListViewAdapter : public IListViewAdapter
     {
         static_assert(std::is_base_of_v<ListViewItem, U>, "O parâmetro U deve herdar de ListViewItem.");
 

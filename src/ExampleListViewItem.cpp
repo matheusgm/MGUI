@@ -26,14 +26,22 @@ void ExampleListViewItem::updateWithData(const Example &data, size_t index)
     }
 }
 
-void ExampleListViewItem::render(sf::RenderTarget &target)
-{
-    target.draw(m_background);
-    target.draw(m_productName);
-}
-
 void ExampleListViewItem::setPosition(const float x, const float y)
 {
     m_background.setPosition({x, y});
     m_productName.setPosition({x + 10.0f, y + m_background.getSize().y * 0.2f});
+}
+
+void ExampleListViewItem::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
+{
+}
+
+void ExampleListViewItem::update(const sf::Vector2f &mousePos)
+{
+}
+
+void ExampleListViewItem::render(sf::RenderTarget &target)
+{
+    target.draw(m_background);
+    target.draw(m_productName);
 }
