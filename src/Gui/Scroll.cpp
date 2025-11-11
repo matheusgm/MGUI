@@ -2,7 +2,7 @@
 #include "Scroll.h"
 
 gui::Scroll::Scroll(float x, float y, float width, float height)
-	: BaseGui({x, y}, {width, height}),
+	: GuiElement({x, y}, {width, height}),
 	  indicatorHeight(width * 2)
 {
 	// Button Up
@@ -43,7 +43,7 @@ gui::Scroll::Scroll(float x, float y, float width, float height)
 
 void gui::Scroll::setPosition(float x, float y)
 {
-	BaseGui::setPosition(x, y);
+	GuiElement::setPosition(x, y);
 
 	buttonUp->setPosition(x, y);
 	shape.setPosition({x, y + buttonUp->getSize().y});
@@ -54,7 +54,7 @@ void gui::Scroll::setPosition(float x, float y)
 
 void gui::Scroll::setSize(float width, float height)
 {
-	BaseGui::setSize(width, height);
+	GuiElement::setSize(width, height);
 
 	buttonUp->setSize(width, width);
 	shape.setSize({width, height - 2 * width});

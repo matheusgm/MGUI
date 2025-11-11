@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Base/BaseGui.h"
+#include "Base/GuiElement.h"
 
 namespace gui
 {
-	class Slider : BaseGui
+	class Slider : GuiElement
 	{
 	private:
 		sf::RectangleShape backgroundShape;
@@ -38,7 +38,7 @@ namespace gui
 		void setSize(float width, float height) override;
 		void onValueChange(std::function<void()> callback) { onValueChangeCallback = std::move(callback); };
 
-		// Herdado por meio de BaseGui
+		// Herdado por meio de GuiElement
 		void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
 		void update(const sf::Vector2f &mousePos) override;
 		void render(sf::RenderTarget &target) override;

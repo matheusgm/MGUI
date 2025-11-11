@@ -8,7 +8,7 @@ gui::Button::Button(float x, float y, float width, float height,
 					sf::Color textNormal, sf::Color textHover, sf::Color textPressed,
 					sf::Color normal, sf::Color hover, sf::Color pressed,
 					sf::Color outlineNormal, sf::Color outlineHover, sf::Color outlinePressed,
-					short unsigned id) : BaseGui({x, y}, {width, height}),
+					short unsigned id) : GuiElement({x, y}, {width, height}),
 										 text(loadFont(font), textStr),
 										 buttonState(ButtonState::NORMAL),
 										 id(id),
@@ -56,7 +56,7 @@ sf::Font &gui::Button::loadFont(sf::Font *font)
 
 void gui::Button::setPosition(float x, float y)
 {
-	BaseGui::setPosition(x, y);
+	GuiElement::setPosition(x, y);
 	shape.setPosition(getPosition());
 
 	auto bounds = text.getLocalBounds();
@@ -66,7 +66,7 @@ void gui::Button::setPosition(float x, float y)
 
 void gui::Button::setSize(float width, float height)
 {
-	BaseGui::setSize(width, height);
+	GuiElement::setSize(width, height);
 	shape.setSize(getSize());
 	setPosition(getLeft(), getTop()); // Re-center text
 }

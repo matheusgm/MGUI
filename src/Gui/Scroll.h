@@ -1,10 +1,10 @@
 #pragma once
-#include "Base/BaseGui.h"
+#include "Base/GuiElement.h"
 #include "Button.h"
 
 namespace gui
 {
-    class Scroll : public BaseGui
+    class Scroll : public GuiElement
     {
     private:
         sf::RectangleShape shape;
@@ -54,7 +54,7 @@ namespace gui
         void setIndicatorHeight(float height) { indicatorHeight = height; }
         void onValueChange(std::function<void()> callback) { onValueChangeCallback = std::move(callback); };
 
-        // Herdado por meio de BaseGui
+        // Herdado por meio de GuiElement
         void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
         void update(const sf::Vector2f &mousePos) override;
         void render(sf::RenderTarget &target) override;

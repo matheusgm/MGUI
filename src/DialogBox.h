@@ -1,11 +1,11 @@
 #pragma once
-#include "Gui/Base/BaseGui.h"
+#include "Gui/Base/GuiElement.h"
 #include "Gui/Button.h"
-#include "DialogNode.h"
+#include "Model/DialogNode.h"
 
 namespace gui
 {
-    class DialogBox : public BaseGui
+    class DialogBox : public GuiElement
     {
     private:
         sf::RectangleShape shape;
@@ -35,7 +35,7 @@ namespace gui
         void setPosition(float x, float y) override;
         void setSize(float width, float height) override;
 
-        // Herdado por meio de BaseGui
+        // Herdado por meio de GuiElement
         void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
         void update(const sf::Vector2f &mousePos) override;
         void render(sf::RenderTarget &target) override;

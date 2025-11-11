@@ -3,7 +3,7 @@
 
 gui::Slider::Slider(float x, float y, float width, float height,
 					int min_value, int max_value, int default_value, int step,
-					sf::Color background_color, sf::Color foreground_color, sf::Color indicator_color) : BaseGui({x, y}, {width, height}),
+					sf::Color background_color, sf::Color foreground_color, sf::Color indicator_color) : GuiElement({x, y}, {width, height}),
 																										 step(step),
 																										 minValue(min_value),
 																										 maxValue(max_value),
@@ -29,7 +29,7 @@ gui::Slider::Slider(float x, float y, float width, float height,
 
 void gui::Slider::setPosition(float x, float y)
 {
-	BaseGui::setPosition(x, y);
+	GuiElement::setPosition(x, y);
 
 	backgroundShape.setPosition(getPosition());
 	foregroundShape.setPosition(getPosition());
@@ -39,7 +39,7 @@ void gui::Slider::setPosition(float x, float y)
 
 void gui::Slider::setSize(float width, float height)
 {
-	BaseGui::setSize(width, height);
+	GuiElement::setSize(width, height);
 
 	backgroundShape.setSize(getSize());
 

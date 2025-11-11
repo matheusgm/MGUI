@@ -2,13 +2,14 @@
 
 namespace gui
 {
-	class BaseGui
+	class GuiElement
 	{
 
 	private:
 		sf::FloatRect rect;
 	public:
-		BaseGui(sf::Vector2f position, sf::Vector2f size);
+		GuiElement(sf::Vector2f position, sf::Vector2f size);
+		virtual ~GuiElement() = default;
 
 		// Acessors
 		const sf::Vector2f getPosition() const;

@@ -4,7 +4,7 @@
 std::unique_ptr<sf::Font> gui::DialogBox::defaultFont;
 
 gui::DialogBox::DialogBox(float x, float y, float width, float height)
-	: BaseGui({x, y}, {width, height}),
+	: GuiElement({x, y}, {width, height}),
 	  text(loadFont())
 {
 	// Shape
@@ -65,7 +65,7 @@ sf::Font &gui::DialogBox::loadFont()
 
 void gui::DialogBox::setPosition(float x, float y)
 {
-	BaseGui::setPosition(x, y);
+	GuiElement::setPosition(x, y);
 	shape.setPosition(getPosition());
 
 	text.setOrigin({-20.f, -20.f});
@@ -76,7 +76,7 @@ void gui::DialogBox::setPosition(float x, float y)
 
 void gui::DialogBox::setSize(float width, float height)
 {
-	BaseGui::setSize(width, height);
+	GuiElement::setSize(width, height);
 	shape.setSize(getSize());
 	setPosition(getLeft(), getTop());
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Base/BaseGui.h"
+#include "Base/GuiElement.h"
 
 namespace gui
 {
@@ -12,7 +12,7 @@ namespace gui
 		DISABLED
 	};
 
-	class Button : public BaseGui
+	class Button : public GuiElement
 	{
 	private:
 		ButtonState buttonState = ButtonState::NORMAL;
@@ -76,7 +76,7 @@ namespace gui
 		void onPressed(std::function<void()> callback) { onPressedCallback = std::move(callback); };
 
 		// Functions
-		// Herdado por meio de BaseGui
+		// Herdado por meio de GuiElement
 		void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
 		void update(const sf::Vector2f &mousePos) override;
 		void render(sf::RenderTarget &target) override;

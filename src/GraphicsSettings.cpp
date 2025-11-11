@@ -3,13 +3,13 @@
 
 GraphicsSettings::GraphicsSettings()
 {
-    this->title = "DEFAULT";
-    this->resolution = sf::VideoMode::getDesktopMode();
-    this->fullscreen = false;
-    this->verticalSync = false;
-    this->frameRateLimit = 120;
-    this->contextSettings.antiAliasingLevel = 0;
-    this->videoMode = sf::VideoMode::getFullscreenModes();
+    title = "DEFAULT";
+    resolution = sf::VideoMode::getDesktopMode();
+    fullscreen = false;
+    verticalSync = false;
+    frameRateLimit = 120;
+    contextSettings.antiAliasingLevel = 0;
+    videoMode = sf::VideoMode::getFullscreenModes();
 }
 
 void GraphicsSettings::saveToFile(const std::string path)
@@ -17,12 +17,12 @@ void GraphicsSettings::saveToFile(const std::string path)
     std::ofstream ofs(path);
 
     if (ofs.is_open()) {
-        ofs << this->title;
-        ofs << this->resolution.size.x << " " << this->resolution.size.y;
-        ofs << this->fullscreen;
-        ofs << this->frameRateLimit;
-        ofs << this->verticalSync;
-        ofs << this->contextSettings.antiAliasingLevel;
+        ofs << title;
+        ofs << resolution.size.x << " " << resolution.size.y;
+        ofs << fullscreen;
+        ofs << frameRateLimit;
+        ofs << verticalSync;
+        ofs << contextSettings.antiAliasingLevel;
     }
 
     ofs.close();
@@ -32,12 +32,12 @@ void GraphicsSettings::loadFromFile(const std::string path)
     std::ifstream ifs(path);
 
     if (ifs.is_open()) {
-        std::getline(ifs, this->title);
-        ifs >> this->resolution.size.x >> this->resolution.size.y;
-        ifs >> this->fullscreen;
-        ifs >> this->frameRateLimit;
-        ifs >> this->verticalSync;
-        ifs >> this->contextSettings.antiAliasingLevel;
+        std::getline(ifs, title);
+        ifs >> resolution.size.x >> resolution.size.y;
+        ifs >> fullscreen;
+        ifs >> frameRateLimit;
+        ifs >> verticalSync;
+        ifs >> contextSettings.antiAliasingLevel;
     }
 
     ifs.close();
