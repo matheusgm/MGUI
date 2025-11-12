@@ -10,3 +10,8 @@ bool gui::GuiElement::contains(const sf::Vector2f &points) const
 {
 	return this->getGlobalBounds().contains(points);
 }
+
+sf::Vector2f gui::GuiElement::mapGlobalToLocal(const sf::Vector2f &globalMousePos) const
+{
+    return getInverseTransform().transformPoint(globalMousePos);
+}

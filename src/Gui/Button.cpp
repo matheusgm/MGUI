@@ -77,15 +77,22 @@ void gui::Button::setDisabled(bool disable)
 sf::FloatRect gui::Button::getGlobalBounds() const
 {
 	// With Shape Outline Thickness
-	// sf::FloatRect localBounds = shape.getLocalBounds();
-	// return getTransform().transformRect(localBounds);
+	sf::FloatRect localBounds = shape.getLocalBounds();
+	return getTransform().transformRect(localBounds);
 
 	// Without Shape Outline Thickness
-	sf::Vector2f globalPos = this->getPosition();
+	// sf::Vector2f globalPos = this->getPosition();
 
-	sf::Vector2f size = shape.getSize();
+	// sf::Vector2f size = shape.getSize();
 
-	return sf::FloatRect({globalPos.x, globalPos.y}, {size.x, size.y});
+	// return sf::FloatRect({globalPos.x, globalPos.y}, {size.x, size.y});
+}
+
+bool gui::Button::isHovered(const sf::Vector2f &mousePos) const
+{
+	sf::FloatRect boundsSpace = getTransform().transformRect(shape.getLocalBounds());
+
+	return boundsSpace.contains(mousePos);
 }
 
 // Functions
@@ -94,7 +101,7 @@ void gui::Button::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 	if (buttonState == ButtonState::DISABLED)
 		return;
 
-	bool hovered = getGlobalBounds().contains(mousePos);
+	bool hovered = isHovered(mousePos);
 
 	// Check MouseButtonPressed
 	if (auto mousePressed = sfEvent.getIf<sf::Event::MouseButtonPressed>())
@@ -131,7 +138,7 @@ void gui::Button::update(const sf::Vector2f &mousePos)
 	{
 		buttonReleased = false;
 		buttonState = ButtonState::NORMAL;
-		bool hovered = getGlobalBounds().contains(mousePos);
+		bool hovered = isHovered(mousePos);
 		if (hovered)
 			buttonState = ButtonState::HOVER;
 	}

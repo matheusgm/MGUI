@@ -2,19 +2,29 @@
 
 #include "Base/GuiElement.hpp"
 #include "IListViewAdapter.hpp"
+#include "Scroll.hpp"
 
 namespace gui
 {
 	class ListView : public GuiElement
 	{
 	private:
+		const size_t MAX_VIEWS_IN_BUFFER = 20;
+
 		std::unique_ptr<const IListViewAdapter> m_adapter;
 		sf::RectangleShape m_background;
 		sf::FloatRect m_viewport;
 		float m_scrollOffset = 0.0f;
 
+		std::unique_ptr<gui::Scroll> m_scrollBar;
+
+		int m_firstVisibleItem = 0;   
+        int m_itemsToShow = 0;
+
 		std::vector<std::unique_ptr<ListViewItem>> m_viewBuffer;
-		const size_t MAX_VIEWS_IN_BUFFER = 20;
+
+		void calculateScrollLayout();
+        void setupScrollBar();
 
 		virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 

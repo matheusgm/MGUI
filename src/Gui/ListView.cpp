@@ -1,6 +1,63 @@
 #include "../stdafx.hpp"
 #include "ListView.hpp"
 
+void gui::ListView::calculateScrollLayout()
+{
+	float itemHeight = m_adapter->getItemHeight();
+
+	// 1. Deriva o m_scrollOffset do valor inteiro do Scrollbar (Sincronização)
+	if (m_scrollBar)
+	{
+		int scrollValue = m_scrollBar->getValue();
+		m_scrollOffset = static_cast<float>(scrollValue) * itemHeight;
+
+		m_scrollOffset = std::max(0.0f, m_scrollOffset);
+	}
+
+	// 2. Calcula os índices de desenho (Cache)
+	if (m_viewport.size.y > 0 && itemHeight > 0)
+	{
+		m_firstVisibleItem = static_cast<int>(m_scrollOffset / itemHeight);
+		m_itemsToShow = static_cast<int>(m_viewport.size.y / itemHeight) + 1;
+	}
+	else
+	{
+		m_firstVisibleItem = 0;
+		m_itemsToShow = 0;
+	}
+}
+
+void gui::ListView::setupScrollBar()
+{
+	if (!m_scrollBar)
+		return;
+
+	float itemHeight = m_adapter->getItemHeight();
+	size_t itemCount = m_adapter->getItemCount();
+
+	int maxIndex = 0;
+
+	if (itemCount > 0 && itemHeight > 0)
+	{
+		int itemsInView = static_cast<int>(m_viewport.size.y / itemHeight);
+		maxIndex = std::max(0, static_cast<int>(itemCount) - itemsInView);
+	}
+
+	// 1. Atualiza os limites (Range) do Scroll
+	m_scrollBar->setMinValue(0);
+	m_scrollBar->setMaxValue(maxIndex);
+
+	// 2. Sincroniza o valor inicial do Scrollbar com o offset
+	// Usamos round() para maior precisão na conversão float->int
+	m_scrollBar->setValue(static_cast<int>(std::round(m_scrollOffset / itemHeight)));
+
+	// 3. Calcula o tamanho do indicador (Thumb) com base na proporção
+	float totalContentHeight = itemCount * itemHeight;
+	float contentRatio = m_viewport.size.y / totalContentHeight;
+
+	m_scrollBar->setIndicatorHeightRatio(std::clamp(contentRatio, 0.0f, 1.0f));
+}
+
 void gui::ListView::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
 	states.transform *= this->getTransform();
@@ -14,28 +71,23 @@ void gui::ListView::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 
 	sf::Vector2f globalPosition = states.transform.transformPoint({0.f, 0.f});
 
+	sf::FloatRect viewport({globalPosition.x / (float)targetSize.x,
+							globalPosition.y / (float)targetSize.y},
+						   {size.x / (float)targetSize.x,
+							size.y / (float)targetSize.y});
+
 	sf::View renderView(sf::FloatRect({0.f, 0.f}, {size.x, size.y}));
-
-	sf::FloatRect viewport({globalPosition.x / targetSize.x,
-							globalPosition.y / targetSize.y},
-						   {size.x / targetSize.x,
-							size.y / targetSize.y});
-
 	renderView.setViewport(viewport);
 	target.setView(renderView);
 
-	// 2. Preparação e Cálculo
-	float itemHeight = m_adapter->getItemHeight();
-	int firstVisibleItem = static_cast<int>(m_scrollOffset / itemHeight);
-	int itemsToShow = static_cast<int>(m_viewport.size.y / itemHeight) + 1;
-
 	// Limita o loop ao menor valor: itens visíveis OU o tamanho do buffer fixo (20)
-	size_t loopLimit = std::min(static_cast<size_t>(itemsToShow), MAX_VIEWS_IN_BUFFER);
+	size_t loopLimit = std::min(static_cast<size_t>(m_itemsToShow), MAX_VIEWS_IN_BUFFER);
+	float itemHeight = m_adapter->getItemHeight();
 
 	// 3. FASE DE BIND E DESENHO
 	for (size_t i = 0; i < loopLimit; ++i)
 	{
-		size_t dataIndex = firstVisibleItem + i;
+		size_t dataIndex = m_firstVisibleItem + i;
 
 		if (dataIndex >= m_adapter->getItemCount())
 			continue;
@@ -43,13 +95,16 @@ void gui::ListView::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 		ListViewItem *currentView = m_viewBuffer[i].get();
 		m_adapter->updateView(*currentView, dataIndex);
 
-		sf::Vector2f itemPosition(0.f, (i * itemHeight) - (m_scrollOffset - (firstVisibleItem * itemHeight)));
-
+		sf::Vector2f itemPosition(0.f, (i * itemHeight) - (m_scrollOffset - (m_firstVisibleItem * itemHeight)));
 		currentView->setPosition(itemPosition);
+
 		target.draw(*currentView, sf::RenderStates::Default);
 	}
 
 	target.setView(oldView);
+
+	if (m_scrollBar)
+		target.draw(*m_scrollBar, states);
 }
 
 gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, std::unique_ptr<const IListViewAdapter> adapter)
@@ -62,30 +117,49 @@ gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, 
 
 	for (size_t i = 0; i < MAX_VIEWS_IN_BUFFER; ++i)
 		m_viewBuffer.push_back(m_adapter->createView());
+
+	float scrollWidth = 20.0f;
+
+	m_scrollBar = std::make_unique<gui::Scroll>(sf::Vector2f(size.x - scrollWidth, 0.0f), sf::Vector2f(scrollWidth, size.y));
+
+	m_scrollBar->onValueChange([this]()
+							   { this->calculateScrollLayout(); });
+
+	calculateScrollLayout();
+	setupScrollBar();
 }
 
 void gui::ListView::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
+	sf::Vector2f listViewLocalMousePos = mapGlobalToLocal(mousePos);
+
+	if (m_scrollBar)
+	{
+		m_scrollBar->updateEvents(sfEvent, listViewLocalMousePos);
+	}
+
 	if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseWheelScrolled>())
 	{
-		if (getGlobalBounds().contains(mousePos))
+		if (getGlobalBounds().contains(mousePos) && m_scrollBar)
 		{
-			float itemHeight = m_adapter->getItemHeight();
-			float scrollDelta = mouseEvent->delta * itemHeight;
-			m_scrollOffset -= scrollDelta;
+			int scrollValue = m_scrollBar->getValue();
+			scrollValue -= static_cast<int>(mouseEvent->delta);
 
-			float totalContentHeight = m_adapter->getItemCount() * itemHeight;
-			float maxScroll = totalContentHeight - m_viewport.size.y;
+			m_scrollBar->setValue(scrollValue);
 
-			float finalMaxScroll = std::max(0.0f, maxScroll);
-
-			m_scrollOffset = std::clamp(m_scrollOffset, 0.0f, finalMaxScroll);
+			calculateScrollLayout();
 		}
 	}
 }
 
 void gui::ListView::update(const sf::Vector2f &mousePos)
 {
+	sf::Vector2f listViewLocalMousePos = mapGlobalToLocal(mousePos);
+
+	if (m_scrollBar)
+	{
+		m_scrollBar->update(listViewLocalMousePos);
+	}
 }
 
 sf::FloatRect gui::ListView::getGlobalBounds() const

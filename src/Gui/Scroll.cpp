@@ -83,6 +83,33 @@ void gui::Scroll::scrollWheel(int delta)
 		onValueChangeCallback();
 }
 
+void gui::Scroll::setIndicatorHeightRatio(float ratio)
+{
+	// 1. Limita a proporção entre 0 e 1
+	ratio = std::clamp(ratio, 0.0f, 1.0f);
+
+	// 2. Calcula a altura total da área da track (sem os botões)
+	float scrollAreaHeight = shape.getSize().y;				   // Altura total da barra
+	sf::Vector2f btnUpSize = buttonUp->getGlobalBounds().size; // Assumindo que o botãoUp já foi inicializado
+	float trackHeight = scrollAreaHeight - (2 * btnUpSize.y);
+
+	// 3. Calcula a nova altura do indicador em pixels
+	// A altura mínima para o indicador deve ser o tamanho do botão (para ser clicável)
+	float minIndicatorHeight = btnUpSize.y;
+
+	// A altura máxima é a altura total da track.
+	float calculatedHeight = trackHeight * ratio;
+
+	// Garante que o indicador não seja menor que o mínimo e não maior que a track
+	indicatorHeight = std::clamp(calculatedHeight, minIndicatorHeight, trackHeight);
+
+	// 4. Aplica o novo tamanho
+	indicatorShape.setSize({shape.getSize().x, indicatorHeight});
+
+	// 5. Re-calcula a posição para garantir que ela esteja nos limites após a mudança de tamanho
+	updateIndicatorPosition();
+}
+
 void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 {
 	sf::Vector2f scrollGlobalPos = getPosition();
@@ -140,13 +167,12 @@ void gui::Scroll::draw(sf::RenderTarget &target, sf::RenderStates states) const
 
 void gui::Scroll::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
-	sf::Vector2f localMousePos = this->getInverseTransform().transformPoint(mousePos);
+	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
 
-	buttonUp->updateEvents(sfEvent, localMousePos);
-	buttonDown->updateEvents(sfEvent, localMousePos);
+	buttonUp->updateEvents(sfEvent, scrollLocalMousePos);
+	buttonDown->updateEvents(sfEvent, scrollLocalMousePos);
 
 	sf::Transform indicatorTotalTransform = getTransform() * indicatorShape.getTransform();
-
 	sf::FloatRect indicatorGlobalBounds = indicatorTotalTransform.transformRect(indicatorShape.getLocalBounds());
 
 	if (indicatorGlobalBounds.contains(mousePos))
@@ -184,8 +210,10 @@ void gui::Scroll::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 
 void gui::Scroll::update(const sf::Vector2f &mousePos)
 {
-	buttonUp->update(mousePos);
-	buttonDown->update(mousePos);
+	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
+
+	buttonUp->update(scrollLocalMousePos);
+	buttonDown->update(scrollLocalMousePos);
 }
 
 sf::FloatRect gui::Scroll::getGlobalBounds() const

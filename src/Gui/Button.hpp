@@ -74,11 +74,13 @@ namespace gui
 		void setDisabled(bool disable);
 		void onPressed(std::function<void()> callback) { onPressedCallback = std::move(callback); };
 
-		
 		// Functions
 		// Herdado por meio de GuiElement
 		void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
 		void update(const sf::Vector2f &mousePos) override;
 		virtual sf::FloatRect getGlobalBounds() const override;
+
+	protected:
+		bool isHovered(const sf::Vector2f &mousePos) const;
 	};
 }

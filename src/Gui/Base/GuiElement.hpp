@@ -20,6 +20,9 @@ namespace gui
 		virtual sf::FloatRect getGlobalBounds() const = 0;
 		virtual void setSize(const sf::Vector2f &newSize) {}; // Optional to implement
 
+	protected:
+		sf::Vector2f mapGlobalToLocal(const sf::Vector2f &globalMousePos) const;
+
 	private:
 		virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override = 0;
 	};

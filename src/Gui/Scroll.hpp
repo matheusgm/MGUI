@@ -36,6 +36,7 @@ namespace gui
         void scrollWheel(int delta);
         int getValue() const { return value; };
 
+        void setIndicatorHeightRatio(float ratio);
         void setMinValue(int value)
         {
             minValue = value;
@@ -51,6 +52,12 @@ namespace gui
         int getMinValue() const { return minValue; };
         int getMaxValue() const { return maxValue; };
         void setIndicatorHeight(float height) { indicatorHeight = height; }
+        void setValue(int value)
+        {
+            this->value = value;
+            clampValue();
+            updateIndicatorPosition();
+        }
         void onValueChange(std::function<void()> callback) { onValueChangeCallback = std::move(callback); };
 
         // Herdado por meio de GuiElement
