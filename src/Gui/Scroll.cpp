@@ -98,14 +98,10 @@ void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 	// Topo do Indicador Desejado = Mouse Y - Offset (distância do clique ao topo)
 	float indicatorTopDesired = mousePos.y - dragOffsetY;
 
-	// 2. Limites de Movimento para o TOPO do indicador.
-	// O topo do indicador não pode subir acima do topo da track.
 	float topLimit = trackTopGlobal;
 
-	// O topo do indicador não pode descer abaixo do topo da track + a altura total de movimento.
 	float bottomLimit = trackTopGlobal + trackHeight - indicatorSize.y;
 
-	// Clamp o topo do indicador
 	float clampedTopY = std::clamp(indicatorTopDesired, topLimit, bottomLimit);
 
 	// 3. Calcular a Porcentagem (Perc) a partir do TOPO (clampedTopY)
@@ -116,9 +112,8 @@ void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 	float maxMovement = bottomLimit - topLimit;
 
 	float perc = distanceMoved / maxMovement;
-	perc = std::clamp(perc, 0.f, 1.f); // Garante a precisão
+	perc = std::clamp(perc, 0.f, 1.f);
 
-	// 4. Converter Porcentagem para o Valor
 	int range = std::max(1, maxValue - minValue);
 	int newVal = minValue + static_cast<int>(perc * range);
 

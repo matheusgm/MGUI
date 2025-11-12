@@ -16,7 +16,6 @@ gui::Select::Select(sf::Vector2f position, sf::Vector2f size)
 	shape.setFillColor(sf::Color::Red);
 	shape.setOutlineThickness(1.f);
 	shape.setOutlineColor(sf::Color::Black);
-	shape.setPosition(position);
 }
 
 void gui::Select::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
@@ -29,5 +28,6 @@ void gui::Select::update(const sf::Vector2f &mousePos)
 
 sf::FloatRect gui::Select::getGlobalBounds() const
 {
-	return shape.getGlobalBounds();
+	sf::FloatRect localBounds = shape.getLocalBounds();
+	return getTransform().transformRect(localBounds);
 }
