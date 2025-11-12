@@ -9,18 +9,19 @@ void gui::ListView::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 
 	sf::View oldView = target.getView();
 
-	sf::Vector2f position = getPosition();
 	sf::Vector2f size = m_background.getSize();
+	sf::Vector2u targetSize = target.getSize();
 
-	sf::View renderView(sf::FloatRect(position, size));
+	sf::Vector2f globalPosition = states.transform.transformPoint({0.f, 0.f});
 
-	sf::FloatRect viewport({position.x / target.getSize().x,
-							position.y / target.getSize().y},
-						   {size.x / target.getSize().x,
-							size.y / target.getSize().y});
+	sf::View renderView(sf::FloatRect({0.f, 0.f}, {size.x, size.y}));
+
+	sf::FloatRect viewport({globalPosition.x / targetSize.x,
+							globalPosition.y / targetSize.y},
+						   {size.x / targetSize.x,
+							size.y / targetSize.y});
 
 	renderView.setViewport(viewport);
-
 	target.setView(renderView);
 
 	// 2. Preparação e Cálculo
@@ -34,25 +35,18 @@ void gui::ListView::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 	// 3. FASE DE BIND E DESENHO
 	for (size_t i = 0; i < loopLimit; ++i)
 	{
-		size_t dataIndex = firstVisibleItem + i; // Índice do dado na lista completa (0 a 999)
+		size_t dataIndex = firstVisibleItem + i;
 
 		if (dataIndex >= m_adapter->getItemCount())
 			continue;
 
-		// Acessa o componente visual no índice 'i' do nosso buffer fixo (0 a 19)
 		ListViewItem *currentView = m_viewBuffer[i].get();
-
-		// **ATUALIZAÇÃO DO CONTEÚDO (O Bind)**
-		// O componente [i] do buffer é atualizado com o dado [dataIndex].
 		m_adapter->updateView(*currentView, dataIndex);
 
-		// Calcula a posição na tela
-		sf::Vector2f itemPosition(
-			m_viewport.position.x,
-			m_viewport.position.y + (i * itemHeight) - (m_scrollOffset - (firstVisibleItem * itemHeight)));
+		sf::Vector2f itemPosition(0.f, (i * itemHeight) - (m_scrollOffset - (firstVisibleItem * itemHeight)));
 
 		currentView->setPosition(itemPosition);
-		target.draw(*currentView, states);
+		target.draw(*currentView, sf::RenderStates::Default);
 	}
 
 	target.setView(oldView);
@@ -61,7 +55,6 @@ void gui::ListView::draw(sf::RenderTarget &target, sf::RenderStates states) cons
 gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, std::unique_ptr<const IListViewAdapter> adapter)
 	: GuiElement(position, size), m_adapter(std::move(adapter)), m_viewport(position, size)
 {
-	m_background.setPosition(position);
 	m_background.setSize(size);
 	m_background.setFillColor(sf::Color::Yellow);
 	m_background.setOutlineThickness(1.f);
@@ -75,7 +68,7 @@ void gui::ListView::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePo
 {
 	if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseWheelScrolled>())
 	{
-		if (m_viewport.contains({static_cast<float>(mouseEvent->position.x), static_cast<float>(mouseEvent->position.y)}))
+		if (getGlobalBounds().contains(mousePos))
 		{
 			float itemHeight = m_adapter->getItemHeight();
 			float scrollDelta = mouseEvent->delta * itemHeight;
@@ -83,13 +76,10 @@ void gui::ListView::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePo
 
 			float totalContentHeight = m_adapter->getItemCount() * itemHeight;
 			float maxScroll = totalContentHeight - m_viewport.size.y;
-			if (maxScroll < 0)
-				maxScroll = 0;
 
-			if (m_scrollOffset < 0)
-				m_scrollOffset = 0;
-			if (m_scrollOffset > maxScroll)
-				m_scrollOffset = maxScroll;
+			float finalMaxScroll = std::max(0.0f, maxScroll);
+
+			m_scrollOffset = std::clamp(m_scrollOffset, 0.0f, finalMaxScroll);
 		}
 	}
 }
@@ -100,5 +90,6 @@ void gui::ListView::update(const sf::Vector2f &mousePos)
 
 sf::FloatRect gui::ListView::getGlobalBounds() const
 {
-	return m_background.getGlobalBounds();
+	sf::FloatRect localBounds = m_background.getLocalBounds();
+	return getTransform().transformRect(localBounds);
 }

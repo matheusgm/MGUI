@@ -3,7 +3,7 @@
 
 void ExampleListViewItem::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-    states.transform *= this->getTransform();
+    states.transform *= getTransform();
 
     target.draw(m_background, states);
     target.draw(m_productName, states);
@@ -30,9 +30,7 @@ void ExampleListViewItem::updateWithData(const Example &data, size_t index)
     m_background.setFillColor(index % 2 == 0 ? sf::Color(70, 70, 70) : sf::Color(90, 90, 90));
 
     if (data.estoque == 0)
-    {
         m_background.setFillColor(sf::Color(150, 50, 50));
-    }
 }
 
 void ExampleListViewItem::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
@@ -45,5 +43,6 @@ void ExampleListViewItem::update(const sf::Vector2f &mousePos)
 
 sf::FloatRect ExampleListViewItem::getGlobalBounds() const
 {
-    return m_background.getGlobalBounds();
+    sf::FloatRect localBounds = m_background.getLocalBounds();
+    return getTransform().transformRect(localBounds);
 }
