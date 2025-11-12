@@ -1,5 +1,5 @@
-#include "stdafx.h"
-#include "MainMenuState.h"
+#include "stdafx.hpp"
+#include "MainMenuState.hpp"
 
 void MainMenuState::initKeybinds()
 {
@@ -12,9 +12,7 @@ void MainMenuState::initKeybinds()
 		std::string key2 = "";
 
 		while (ifs >> key >> key2)
-		{
 			keybinds[key] = data.supportedKeys->at(key2);
-		}
 	}
 
 	ifs.close();
@@ -24,36 +22,36 @@ void MainMenuState::initGui()
 {
 	// Buttons
 	buttons["GAME_STATE"] = std::make_unique<gui::Button>(
-		100.f, 100.f,
-		250.f, 50.f,
+		sf::Vector2f(100.f, 100.f),
+		sf::Vector2f(250.f, 50.f),
 		&font, "New Game", 32);
 
 	buttons["SETTINGS_STATE"] = std::make_unique<gui::Button>(
-		100.f, 200.f,
-		250.f, 50.f,
+		sf::Vector2f(100.f, 200.f),
+		sf::Vector2f(250.f, 50.f),
 		&font, "Settings", 32);
 
 	buttons["DIALOG_BOX_STATE"] = std::make_unique<gui::Button>(
-		100.f, 300.f,
-		250.f, 50.f,
+		sf::Vector2f(100.f, 300.f),
+		sf::Vector2f(250.f, 50.f),
 		&font, "Dialog Box", 32);
 
 	buttons["EXIT_STATE"] = std::make_unique<gui::Button>(
-		100.f, 300.f,
-		250.f, 50.f,
+		sf::Vector2f(100.f, 300.f),
+		sf::Vector2f(250.f, 50.f),
 		&font, "Quit", 32);
 
 	// Settings
 	buttons["SETTINGS_STATE"]->onPressed([this]
-											   { data.states->push(std::make_unique<SettingsState>(data)); });
+										 { data.states->push(std::make_unique<SettingsState>(data)); });
 
 	// Dialog Box
 	buttons["DIALOG_BOX_STATE"]->onPressed([this]
-												 { data.states->push(std::make_unique<DialogBoxState>(data)); });
+										   { data.states->push(std::make_unique<DialogBoxState>(data)); });
 
 	// Quit the game
 	buttons["EXIT_STATE"]->onPressed([this]
-										   { endState(); });
+									 { endState(); });
 }
 
 MainMenuState::MainMenuState(StateData &state_data)
@@ -89,25 +87,22 @@ void MainMenuState::onResizeWindow()
 			static_cast<float>(window_size.x),
 			static_cast<float>(window_size.y)));
 
-	buttons["GAME_STATE"]->setPosition(window_center.x - 125.f, 0 + gap);
+	buttons["GAME_STATE"]->setPosition({window_center.x - 125.f, 0 + gap});
 
 	gui::Button &firstBtn = *buttons["GAME_STATE"];
 
-	buttons["SETTINGS_STATE"]->setPosition(firstBtn.getLeft(), firstBtn.getBottom() + gap);
+	buttons["SETTINGS_STATE"]->setPosition({firstBtn.getLeft(), firstBtn.getBottom() + gap});
 
 	gui::Button &secondBtn = *buttons["SETTINGS_STATE"];
 
-	buttons["DIALOG_BOX_STATE"]->setPosition(firstBtn.getLeft(), secondBtn.getBottom() + gap);
-	buttons["EXIT_STATE"]->setPosition(firstBtn.getLeft(), window_size.y - 50.f - gap);
+	buttons["DIALOG_BOX_STATE"]->setPosition({firstBtn.getLeft(), secondBtn.getBottom() + gap});
+	buttons["EXIT_STATE"]->setPosition({firstBtn.getLeft(), window_size.y - 50.f - gap});
 }
 
 void MainMenuState::updateGui() const
 {
-	/* Updates all the buttons in the state and handles their functionality */
 	for (auto &it : buttons)
-	{
 		it.second->update(mousePosView);
-	}
 }
 
 void MainMenuState::update(float dt)
@@ -120,10 +115,10 @@ void MainMenuState::update(float dt)
 void MainMenuState::renderGui(sf::RenderTarget &target) const
 {
 	for (auto &it : buttons)
-		it.second->render(target);
+		target.draw(*it.second);
 }
 
-void MainMenuState::render(sf::RenderTarget& target)
+void MainMenuState::render(sf::RenderTarget &target)
 {
 	target.draw(background);
 

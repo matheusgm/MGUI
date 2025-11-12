@@ -1,16 +1,12 @@
-#include "../../stdafx.h"
-#include "GuiElement.h"
+#include "../../stdafx.hpp"
+#include "GuiElement.hpp"
 
-gui::GuiElement::GuiElement(sf::Vector2f position, sf::Vector2f size) : rect({position, size})
+gui::GuiElement::GuiElement(sf::Vector2f position, sf::Vector2f size)
 {
+	setPosition(position);
 }
 
-void gui::GuiElement::setPosition(const float x, const float y)
+bool gui::GuiElement::contains(const sf::Vector2f &points) const
 {
-	rect = sf::FloatRect({x, y}, rect.size);
-}
-
-void gui::GuiElement::setSize(const float width, const float height)
-{
-	rect = sf::FloatRect(rect.position, {width, height});
+	return this->getGlobalBounds().contains(points);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Base/GuiElement.h"
+#include "Base/GuiElement.hpp"
 
 namespace gui
 {
@@ -46,19 +46,20 @@ namespace gui
 
 		// Helpers
 		static sf::Font &loadFont(sf::Font *font);
+		virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
 	public:
-		Button(float x, float y, float width, float height,
+		Button(sf::Vector2f position, sf::Vector2f size,
 			   sf::Font *font = nullptr, const std::string &textStr = "Text", unsigned character_size = 24,
 			   sf::Color text_normal_color = sf::Color::Black, sf::Color text_hover_color = sf::Color::White, sf::Color text_pressed_color = sf::Color(200, 200, 200, 255),
 			   sf::Color normal_color = sf::Color::White, sf::Color hover_color = sf::Color::Black, sf::Color pressed_color = sf::Color(60, 60, 60, 255),
 			   sf::Color outline_normal_color = sf::Color::Black, sf::Color outline_hover_color = sf::Color::Black, sf::Color outline_pressed_color = sf::Color::Black,
 			   short unsigned id = 0);
 
-		Button(float x, float y, float width, float height, const std::string &textStr, unsigned character_size = 24)
-			: Button(x, y, width, height, nullptr, textStr, character_size) {};
+		Button(sf::Vector2f position, sf::Vector2f size, const std::string &textStr, unsigned character_size = 24)
+			: Button(position, size, nullptr, textStr, character_size) {};
 
-		Button() : Button(0.f, 0.f, 50.f, 50.f) {};
+		Button() : Button({0.f, 0.f}, {50.f, 50.f}) {};
 
 		virtual ~Button() = default;
 
@@ -68,17 +69,16 @@ namespace gui
 		short unsigned getId() const { return id; };
 
 		// Modifier
-		void setPosition(float x, float y) override;
-		void setSize(float width, float height) override;
 		void setText(const std::string &textStr);
 		void setId(unsigned short id) { this->id = id; }
 		void setDisabled(bool disable);
 		void onPressed(std::function<void()> callback) { onPressedCallback = std::move(callback); };
 
+		
 		// Functions
 		// Herdado por meio de GuiElement
 		void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
 		void update(const sf::Vector2f &mousePos) override;
-		void render(sf::RenderTarget &target) override;
+		virtual sf::FloatRect getGlobalBounds() const override;
 	};
 }

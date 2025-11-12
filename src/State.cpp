@@ -1,5 +1,5 @@
-#include "stdafx.h"
-#include "State.h"
+#include "stdafx.hpp"
+#include "State.hpp"
 
 State::State(StateData &state_data) : data(state_data),
 									  font("src/Fonts/MochiyPopPOne-Regular.ttf")

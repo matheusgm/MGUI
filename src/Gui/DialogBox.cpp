@@ -1,29 +1,27 @@
-#include "stdafx.h"
-#include "DialogBox.h"
+#include "../stdafx.hpp"
+#include "DialogBox.hpp"
 
 std::unique_ptr<sf::Font> gui::DialogBox::defaultFont;
 
-gui::DialogBox::DialogBox(float x, float y, float width, float height)
-	: GuiElement({x, y}, {width, height}),
+gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
+	: GuiElement(position, size),
 	  text(loadFont())
 {
 	// Shape
-	shape.setPosition({x, y});
-	shape.setSize({width, height});
+	shape.setSize(size);
 	shape.setFillColor(sf::Color::Red);
 	shape.setOutlineThickness(1.f);
 	shape.setOutlineColor(sf::Color::Black);
+	shape.setPosition(position);
 
 	// Text
 	text.setFillColor(sf::Color::Black);
 	text.setCharacterSize(24U);
 
 	// Close Button
-	closeButton = gui::Button(
-		getLeft() + 10.f, getBottom() - 35.f,
-		100.f, 25.f, "Close", 16U);
-
-	setPosition(x, y);
+	closeButton = Button(
+		{position.x + 10.f, (position.y + size.y) - 35.f},
+		{100.f, 25.f}, "Close", 16U);
 }
 
 void gui::DialogBox::updateText(const std::string &textStr)
@@ -41,6 +39,34 @@ sf::Font &gui::DialogBox::loadFont()
 	}
 
 	return *defaultFont;
+}
+
+void gui::DialogBox::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	states.transform *= this->getTransform();
+
+	target.draw(shape, states);
+	target.draw(text, states);
+
+	target.draw(closeButton, states);
+
+	for (auto &btn : buttons)
+		target.draw(btn, states);
+
+	// sf::Vertex verticalLine[2];
+	// verticalLine[0].position = sf::Vector2f(150.f, 0.f);
+	// verticalLine[0].color = sf::Color::Red;
+	// verticalLine[1].position = sf::Vector2f(150.f, 800.f);
+	// verticalLine[1].color = sf::Color::Red;
+
+	// sf::Vertex horizontalLine[2];
+	// horizontalLine[0].position = sf::Vector2f(0.f, 200.f);
+	// horizontalLine[0].color = sf::Color::Blue;
+	// horizontalLine[1].position = sf::Vector2f(1200.f, 200.f);
+	// horizontalLine[1].color = sf::Color::Blue;
+
+	// target.draw(verticalLine, 2, sf::PrimitiveType::Lines);
+	// target.draw(horizontalLine, 2, sf::PrimitiveType::Lines);
 }
 
 // gui::DialogBox* gui::DialogBox::CreateOkDialog(float x, float y, float w, float h) {
@@ -63,24 +89,6 @@ sf::Font &gui::DialogBox::loadFont()
 //	return new DialogBox(x, y, w, h, buttons);
 // }
 
-void gui::DialogBox::setPosition(float x, float y)
-{
-	GuiElement::setPosition(x, y);
-	shape.setPosition(getPosition());
-
-	text.setOrigin({-20.f, -20.f});
-	text.setPosition({getLeft(), getTop()});
-
-	closeButton.setPosition(getLeft() + 10.f, getBottom() - 35.f);
-}
-
-void gui::DialogBox::setSize(float width, float height)
-{
-	GuiElement::setSize(width, height);
-	shape.setSize(getSize());
-	setPosition(getLeft(), getTop());
-}
-
 void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
 {
 	dialogType = node->type;
@@ -101,7 +109,7 @@ void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
 
 	for (const auto &[label, _] : node->options)
 	{
-		gui::Button btn(x, y, btnWidth, btnHeight, label);
+		gui::Button btn({x, y}, {btnWidth, btnHeight}, label);
 		btn.onPressed([this, label]()
 					  { if (choiceCallback) choiceCallback(label); });
 		buttons.emplace_back(std::move(btn));
@@ -125,28 +133,7 @@ void gui::DialogBox::update(const sf::Vector2f &mousePos)
 		btn.update(mousePos);
 }
 
-void gui::DialogBox::render(sf::RenderTarget &target)
+sf::FloatRect gui::DialogBox::getGlobalBounds() const
 {
-	target.draw(shape);
-	target.draw(text);
-
-	closeButton.render(target);
-
-	for (auto &btn : buttons)
-		btn.render(target);
-
-	// sf::Vertex verticalLine[2];
-	// verticalLine[0].position = sf::Vector2f(150.f, 0.f);
-	// verticalLine[0].color = sf::Color::Red;
-	// verticalLine[1].position = sf::Vector2f(150.f, 800.f);
-	// verticalLine[1].color = sf::Color::Red;
-
-	// sf::Vertex horizontalLine[2];
-	// horizontalLine[0].position = sf::Vector2f(0.f, 200.f);
-	// horizontalLine[0].color = sf::Color::Blue;
-	// horizontalLine[1].position = sf::Vector2f(1200.f, 200.f);
-	// horizontalLine[1].color = sf::Color::Blue;
-
-	// target.draw(verticalLine, 2, sf::PrimitiveType::Lines);
-	// target.draw(horizontalLine, 2, sf::PrimitiveType::Lines);
+	return shape.getGlobalBounds();
 }

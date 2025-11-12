@@ -1,11 +1,11 @@
 #pragma once
 
-#include "State.h"
-#include "Gui/Slider.h"
-#include "Gui/Button.h"
+#include "State.hpp"
+#include "Gui/Slider.hpp"
+#include "Gui/Button.hpp"
 #include "Gui/ListView.hpp"
-#include "Gui/Select.h"
-#include "Gui/Scroll.h"
+#include "Gui/Select.hpp"
+#include "Gui/Scroll.hpp"
 
 class SettingsState :
     public State 

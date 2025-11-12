@@ -1,14 +1,14 @@
-#include "../stdafx.h"
-#include "Button.h"
+#include "../stdafx.hpp"
+#include "Button.hpp"
 
 std::unique_ptr<sf::Font> gui::Button::defaultFont = nullptr;
 
-gui::Button::Button(float x, float y, float width, float height,
-					sf::Font *font, const std::string &textStr, unsigned character_size,
+gui::Button::Button(sf::Vector2f position, sf::Vector2f size,
+					sf::Font *font, const std::string &textStr, unsigned charSize,
 					sf::Color textNormal, sf::Color textHover, sf::Color textPressed,
 					sf::Color normal, sf::Color hover, sf::Color pressed,
 					sf::Color outlineNormal, sf::Color outlineHover, sf::Color outlinePressed,
-					short unsigned id) : GuiElement({x, y}, {width, height}),
+					short unsigned id) : GuiElement(position, size),
 										 text(loadFont(font), textStr),
 										 buttonState(ButtonState::NORMAL),
 										 id(id),
@@ -26,16 +26,14 @@ gui::Button::Button(float x, float y, float width, float height,
 										 outlineDisabledColor(sf::Color(outlinePressed.r, outlinePressed.g, outlinePressed.b, 150))
 {
 	// Shape
-	shape.setPosition({x, y});
-	shape.setSize({width, height});
+	shape.setSize(size);
 	shape.setFillColor(normalColor);
 	shape.setOutlineThickness(1.f);
 	shape.setOutlineColor(outlineNormal);
 
 	// Text
 	text.setFillColor(textNormal);
-	text.setCharacterSize(character_size);
-
+	text.setCharacterSize(charSize);
 	setText(textStr);
 }
 
@@ -54,28 +52,21 @@ sf::Font &gui::Button::loadFont(sf::Font *font)
 	return *defaultFont;
 }
 
-void gui::Button::setPosition(float x, float y)
+void gui::Button::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {
-	GuiElement::setPosition(x, y);
-	shape.setPosition(getPosition());
+	states.transform *= this->getTransform();
 
-	auto bounds = text.getLocalBounds();
-	text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
-	text.setPosition({getLeft() + getWidth() / 2.f, getTop() + getHeight() / 2.f});
-}
-
-void gui::Button::setSize(float width, float height)
-{
-	GuiElement::setSize(width, height);
-	shape.setSize(getSize());
-	setPosition(getLeft(), getTop()); // Re-center text
+	target.draw(shape, states);
+	target.draw(text, states);
 }
 
 // Modifier
 void gui::Button::setText(const std::string &textStr)
 {
 	text.setString(textStr);
-	setPosition(getLeft(), getTop()); // Re-center text
+	auto bounds = text.getLocalBounds();
+	text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
+	text.setPosition({shape.getSize().x / 2.f, shape.getSize().y / 2.f});
 }
 
 void gui::Button::setDisabled(bool disable)
@@ -83,14 +74,27 @@ void gui::Button::setDisabled(bool disable)
 	buttonState = disable ? ButtonState::DISABLED : ButtonState::NORMAL;
 }
 
+sf::FloatRect gui::Button::getGlobalBounds() const
+{
+	// With Shape Outline Thickness
+	// sf::FloatRect localBounds = shape.getLocalBounds();
+	// return getTransform().transformRect(localBounds);
+
+	// Without Shape Outline Thickness
+	sf::Vector2f globalPos = this->getPosition();
+
+	sf::Vector2f size = shape.getSize();
+
+	return sf::FloatRect({globalPos.x, globalPos.y}, {size.x, size.y});
+}
+
 // Functions
 void gui::Button::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
-	// Disabled
 	if (buttonState == ButtonState::DISABLED)
 		return;
 
-	bool hovered = shape.getGlobalBounds().contains(mousePos);
+	bool hovered = getGlobalBounds().contains(mousePos);
 
 	// Check MouseButtonPressed
 	if (auto mousePressed = sfEvent.getIf<sf::Event::MouseButtonPressed>())
@@ -115,6 +119,7 @@ void gui::Button::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 			buttonState = hovered ? ButtonState::HOVER : ButtonState::NORMAL;
 		}
 	}
+
 	// Update hover state if not pressed
 	if (!buttonPressed)
 		buttonState = hovered ? ButtonState::HOVER : ButtonState::NORMAL;
@@ -126,7 +131,7 @@ void gui::Button::update(const sf::Vector2f &mousePos)
 	{
 		buttonReleased = false;
 		buttonState = ButtonState::NORMAL;
-		bool hovered = shape.getGlobalBounds().contains(mousePos);
+		bool hovered = getGlobalBounds().contains(mousePos);
 		if (hovered)
 			buttonState = ButtonState::HOVER;
 	}
@@ -159,10 +164,4 @@ void gui::Button::update(const sf::Vector2f &mousePos)
 		shape.setOutlineColor(sf::Color::Green);
 		break;
 	}
-}
-
-void gui::Button::render(sf::RenderTarget &target)
-{
-	target.draw(shape);
-	target.draw(text);
 }

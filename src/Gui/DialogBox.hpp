@@ -1,7 +1,7 @@
 #pragma once
-#include "Gui/Base/GuiElement.h"
-#include "Gui/Button.h"
-#include "Model/DialogNode.h"
+#include "Base/GuiElement.hpp"
+#include "Button.hpp"
+#include "Model/DialogNode.hpp"
 
 namespace gui
 {
@@ -23,21 +23,18 @@ namespace gui
         // Helpers
         void updateText(const std::string &textStr);
         static sf::Font &loadFont();
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     public:
-        DialogBox(float x, float y, float width, float height);
+        DialogBox(sf::Vector2f position, sf::Vector2f size);
         virtual ~DialogBox() = default;
 
         void loadNode(const std::shared_ptr<DialogNode>& node);
         void setChoiceCallback(std::function<void(const std::string &)> callback) { choiceCallback = std::move(callback); };
 
-        // Modifier
-        void setPosition(float x, float y) override;
-        void setSize(float width, float height) override;
-
         // Herdado por meio de GuiElement
         void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
         void update(const sf::Vector2f &mousePos) override;
-        void render(sf::RenderTarget &target) override;
+        virtual sf::FloatRect getGlobalBounds() const override;
     };
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "GraphicsSettings.h"
+#include "GraphicsSettings.hpp"
 
 class Player;
 class GraphicsSettings;

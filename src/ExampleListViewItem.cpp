@@ -1,10 +1,19 @@
-#include "stdafx.h"
+#include "stdafx.hpp"
 #include "ExampleListViewItem.hpp"
+
+void ExampleListViewItem::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+    states.transform *= this->getTransform();
+
+    target.draw(m_background, states);
+    target.draw(m_productName, states);
+}
 
 ExampleListViewItem::ExampleListViewItem(const sf::Font &font, float height) : m_productName(font, "")
 {
     m_background.setSize({800.0f, height});
     m_background.setFillColor(sf::Color(100, 100, 100));
+    m_background.setPosition({0.f, 0.f});
 
     m_productName.setCharacterSize(static_cast<unsigned int>(height * 0.2f));
     m_productName.setFillColor(sf::Color::White);
@@ -26,12 +35,6 @@ void ExampleListViewItem::updateWithData(const Example &data, size_t index)
     }
 }
 
-void ExampleListViewItem::setPosition(const float x, const float y)
-{
-    m_background.setPosition({x, y});
-    m_productName.setPosition({x + 10.0f, y + m_background.getSize().y * 0.2f});
-}
-
 void ExampleListViewItem::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
 }
@@ -40,8 +43,7 @@ void ExampleListViewItem::update(const sf::Vector2f &mousePos)
 {
 }
 
-void ExampleListViewItem::render(sf::RenderTarget &target)
+sf::FloatRect ExampleListViewItem::getGlobalBounds() const
 {
-    target.draw(m_background);
-    target.draw(m_productName);
+    return m_background.getGlobalBounds();
 }

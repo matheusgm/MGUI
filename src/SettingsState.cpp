@@ -1,5 +1,5 @@
-#include "stdafx.h"
-#include "SettingsState.h"
+#include "stdafx.hpp"
+#include "SettingsState.hpp"
 #include "Model/Example.hpp"
 #include "Gui/ListViewAdapter.tpp"
 #include "ExampleListViewItem.hpp"
@@ -29,19 +29,19 @@ void SettingsState::initKeybinds()
 void SettingsState::initGui()
 {
 	buttons["BACK"] = std::make_unique<gui::Button>(
-		100.f, 100.f,
-		150.f, 50.f,
+		sf::Vector2f(100.f, 100.f),
+		sf::Vector2f(150.f, 50.f),
 		&font, "Back", 32);
 
 	buttons["APPLY"] = std::make_unique<gui::Button>(
-		100.f, 200.f,
-		150.f, 50.f,
+		sf::Vector2f(100.f, 200.f),
+		sf::Vector2f(150.f, 50.f),
 		&font, "Apply", 32);
 
 	// Button functionality
 	// Quit the game
 	buttons["BACK"]->onPressed([this]
-									 { endState(); });
+							   { endState(); });
 
 	/*std::vector<std::string> modes_str;
 	for (auto& i : modes) {
@@ -54,7 +54,7 @@ void SettingsState::initGui()
 	soundText.setString("Sound:");
 	soundText.setFont(font);
 
-	soundSlider = std::make_unique<gui::Slider>(100.f, 100.f, 250.f, 16.f, 0, 100, 50);
+	soundSlider = std::make_unique<gui::Slider>(sf::Vector2f(100.f, 100.f), sf::Vector2f(250.f, 16.f), 0, 100, 50);
 	soundSlider->onValueChange(
 		[this]
 		{ soundValue.setString(std::to_string(soundSlider->getValue()) + "%"); });
@@ -77,13 +77,13 @@ void SettingsState::initGui()
 	float itemHeight = 60.0f;
 	auto produtoAdapter = std::make_unique<gui::ListViewAdapter<Example, ExampleListViewItem>>(std::move(todosOsProdutos), font, itemHeight);
 
-	listView = std::make_unique<gui::ListView>(sf::Vector2f({200.f, 200.f}), sf::Vector2f({200.f, 300.f}), std::move(produtoAdapter));
+	listView = std::make_unique<gui::ListView>(sf::Vector2f(200.f, 200.f), sf::Vector2f(200.f, 300.f), std::move(produtoAdapter));
 
 	// SELECT ====================================
-	select = std::make_unique<gui::Select>(500.f, 200.f, 200.f, 100.f);
+	select = std::make_unique<gui::Select>(sf::Vector2f(500.f, 200.f), sf::Vector2f(200.f, 100.f));
 
 	// SCROLL ====================================
-	scroll = std::make_unique<gui::Scroll>(1000.f, 200.f, 20.f, 200.f);
+	scroll = std::make_unique<gui::Scroll>(sf::Vector2f(1000.f, 200.f), sf::Vector2f(20.f, 200.f));
 }
 
 SettingsState::SettingsState(StateData &state_data)
@@ -130,15 +130,25 @@ void SettingsState::onResizeWindow()
 			static_cast<float>(window_size.y)));
 
 	// Buttons
-	buttons["BACK"]->setPosition(window_size.x - 150.f - gap, window_size.y - 50.f - gap);
+	buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
 	gui::Button &firstBtn = *buttons["BACK"];
-	buttons["APPLY"]->setPosition(firstBtn.getLeft() - 150.f - gap, window_size.y - 50.f - gap);
+	buttons["APPLY"]->setPosition({firstBtn.getLeft() - 150.f - gap, window_size.y - 50.f - gap});
 
 	// Sound Slider
-	soundText.setPosition(sf::Vector2f((window_center.x / 2.f) - (soundText.getGlobalBounds().size.x / 2.f), gap));
-	soundValue.setPosition(sf::Vector2f((3.f * window_center.x / 2.f), gap));
-	soundSlider->setPosition(soundText.getPosition().x + soundText.getGlobalBounds().size.x + gap, 50.f + (soundText.getGlobalBounds().size.y / 2.f));
-	soundSlider->setSize(soundValue.getPosition().x - soundText.getPosition().x - soundText.getGlobalBounds().size.x - 2 * gap, 16.f);
+	float soundTextX = (window_center.x / 2.f) - (soundText.getGlobalBounds().size.x / 2.f);
+	soundText.setPosition({soundTextX, gap});
+
+	float soundValueX = (3.f * window_center.x / 2.f);
+	soundValue.setPosition({soundValueX, gap});
+
+	float sliderXStart = soundText.getPosition().x + soundText.getGlobalBounds().size.x + gap;
+	float sliderY = gap + (soundText.getGlobalBounds().size.y / 2.f);
+	soundSlider->setPosition({sliderXStart, sliderY});
+
+	float sliderXEnd = soundValue.getPosition().x - gap;
+	float newWidth = sliderXEnd - sliderXStart;
+	if (newWidth > 0)
+		soundSlider->setSize({newWidth, 16.f});
 }
 
 void SettingsState::updateGui(float dt) const
@@ -163,15 +173,15 @@ void SettingsState::update(float dt)
 void SettingsState::renderGui(sf::RenderTarget &target) const
 {
 	for (auto &it : buttons)
-		it.second->render(target);
+		target.draw(*it.second);
 
 	target.draw(soundText);
 	target.draw(soundValue);
-	soundSlider->render(target);
+	target.draw(*soundSlider);
 
-	listView->render(target);
-	select->render(target);
-	scroll->render(target);
+	target.draw(*listView);
+	target.draw(*select);
+	target.draw(*scroll);
 }
 
 void SettingsState::render(sf::RenderTarget &target)

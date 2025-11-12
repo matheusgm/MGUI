@@ -1,5 +1,5 @@
-#include "stdafx.h"
-#include "DialogTree.h"
+#include "../stdafx.hpp"
+#include "DialogTree.hpp"
 
 gui::DialogTree::DialogTree(std::shared_ptr<DialogNode> root) : currentNode(root) {}
 

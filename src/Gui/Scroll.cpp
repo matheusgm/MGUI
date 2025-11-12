@@ -1,12 +1,12 @@
-#include "../stdafx.h"
-#include "Scroll.h"
+#include "../stdafx.hpp"
+#include "Scroll.hpp"
 
-gui::Scroll::Scroll(float x, float y, float width, float height)
-	: GuiElement({x, y}, {width, height}),
-	  indicatorHeight(width * 2)
+gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
+	: GuiElement(position, size),
+	  indicatorHeight(size.x * 2)
 {
 	// Button Up
-	buttonUp = std::make_unique<Button>(x, y, width, width, "^", 20);
+	buttonUp = std::make_unique<Button>(position, sf::Vector2f(size.x, size.x), "^", 20);
 	buttonUp->onPressed(
 		[this]
 		{
@@ -18,12 +18,14 @@ gui::Scroll::Scroll(float x, float y, float width, float height)
 		});
 
 	// Area
+	shape.setSize(size);
 	shape.setFillColor(sf::Color::Blue);
 	shape.setOutlineThickness(1.f);
 	shape.setOutlineColor(sf::Color::Black);
+	shape.setPosition(position);
 
 	// Button Down
-	buttonDown = std::make_unique<Button>(x, height - width, width, width, "v", 20);
+	buttonDown = std::make_unique<Button>(sf::Vector2f(position.x, size.y - size.x), sf::Vector2f(size.x, size.x), "v", 20);
 	buttonDown->onPressed(
 		[this]
 		{
@@ -36,33 +38,6 @@ gui::Scroll::Scroll(float x, float y, float width, float height)
 
 	// Indicator
 	indicatorShape.setFillColor(sf::Color::Black);
-
-	setSize(width, height);
-	setPosition(x, y);
-}
-
-void gui::Scroll::setPosition(float x, float y)
-{
-	GuiElement::setPosition(x, y);
-
-	buttonUp->setPosition(x, y);
-	shape.setPosition({x, y + buttonUp->getSize().y});
-	buttonDown->setPosition(x, shape.getPosition().y + shape.getSize().y);
-
-	updateIndicatorPosition();
-}
-
-void gui::Scroll::setSize(float width, float height)
-{
-	GuiElement::setSize(width, height);
-
-	buttonUp->setSize(width, width);
-	shape.setSize({width, height - 2 * width});
-	buttonDown->setSize(width, width);
-
-	indicatorShape.setSize({width, indicatorHeight});
-
-	updateIndicatorPosition();
 }
 
 void gui::Scroll::clampValue()
@@ -111,6 +86,18 @@ void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 	}
 }
 
+void gui::Scroll::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	states.transform *= this->getTransform();
+
+	target.draw(shape, states);
+	if (buttonUp)
+		target.draw(*buttonUp, states);
+	if (buttonDown)
+		target.draw(*buttonDown, states);
+	target.draw(indicatorShape, states);
+}
+
 void gui::Scroll::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
 	buttonUp->updateEvents(sfEvent, mousePos);
@@ -152,10 +139,7 @@ void gui::Scroll::update(const sf::Vector2f &mousePos)
 	buttonDown->update(mousePos);
 }
 
-void gui::Scroll::render(sf::RenderTarget &target)
+sf::FloatRect gui::Scroll::getGlobalBounds() const
 {
-	target.draw(shape);
-	buttonUp->render(target);
-	buttonDown->render(target);
-	target.draw(indicatorShape);
+	return shape.getGlobalBounds();
 }

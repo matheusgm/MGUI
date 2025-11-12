@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Model/DialogNode.h"
+#include "Model/DialogNode.hpp"
 
 namespace gui {
 	class DialogTree {

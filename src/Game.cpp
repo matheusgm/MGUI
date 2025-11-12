@@ -1,5 +1,5 @@
-#include "stdafx.h"
-#include "Game.h"
+#include "stdafx.hpp"
+#include "Game.hpp"
 
 // Static functions
 

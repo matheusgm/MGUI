@@ -1,6 +1,6 @@
 #pragma once
-#include "Base/GuiElement.h"
-#include "Button.h"
+#include "Base/GuiElement.hpp"
+#include "Button.hpp"
 
 namespace gui
 {
@@ -27,16 +27,15 @@ namespace gui
         void clampValue();
         void updateIndicatorPosition();
         void handleDrag(const sf::Vector2f &mousePos);
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
 
     public:
-        Scroll(float x, float y, float width, float height);
+        Scroll(sf::Vector2f position, sf::Vector2f size);
         virtual ~Scroll() = default;
 
         void scrollWheel(int delta);
         int getValue() const { return value; };
 
-        void setPosition(float x, float y) override;
-        void setSize(float width, float height) override;
         void setMinValue(int value)
         {
             minValue = value;
@@ -57,6 +56,6 @@ namespace gui
         // Herdado por meio de GuiElement
         void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
         void update(const sf::Vector2f &mousePos) override;
-        void render(sf::RenderTarget &target) override;
+        virtual sf::FloatRect getGlobalBounds() const override;
     };
 }

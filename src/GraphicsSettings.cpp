@@ -1,5 +1,5 @@
-#include "stdafx.h"
-#include "GraphicsSettings.h"
+#include "stdafx.hpp"
+#include "GraphicsSettings.hpp"
 
 GraphicsSettings::GraphicsSettings()
 {
