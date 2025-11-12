@@ -6,7 +6,7 @@ gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
 	  indicatorHeight(size.x * 2)
 {
 	// Button Up
-	buttonUp = std::make_unique<Button>(position, sf::Vector2f(size.x, size.x), "^", 20);
+	buttonUp = std::make_unique<Button>(sf::Vector2f(0.f, 0.f), sf::Vector2f(size.x, size.x), "^", 20);
 	buttonUp->onPressed(
 		[this]
 		{
@@ -22,10 +22,9 @@ gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
 	shape.setFillColor(sf::Color::Blue);
 	shape.setOutlineThickness(1.f);
 	shape.setOutlineColor(sf::Color::Black);
-	shape.setPosition(position);
 
 	// Button Down
-	buttonDown = std::make_unique<Button>(sf::Vector2f(position.x, size.y - size.x), sf::Vector2f(size.x, size.x), "v", 20);
+	buttonDown = std::make_unique<Button>(sf::Vector2f(0.f, size.y - size.x), sf::Vector2f(size.x, size.x), "v", 20);
 	buttonDown->onPressed(
 		[this]
 		{
@@ -38,6 +37,9 @@ gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
 
 	// Indicator
 	indicatorShape.setFillColor(sf::Color::Black);
+	indicatorShape.setSize({size.x, indicatorHeight});
+
+	updateIndicatorPosition();
 }
 
 void gui::Scroll::clampValue()
@@ -51,9 +53,25 @@ void gui::Scroll::updateIndicatorPosition()
 	float perc = float(value - minValue) / float(range);
 	perc = std::clamp(perc, 0.f, 1.f);
 
-	indicatorShape.setPosition(
-		{shape.getPosition().x,
-		 shape.getPosition().y + (shape.getSize().y - indicatorShape.getGlobalBounds().size.y) * perc});
+	sf::Vector2f shapeSize = shape.getSize();
+	sf::Vector2f btnUpSize = buttonUp->getGlobalBounds().size;
+
+	// Altura da área livre para o indicador (Track)
+	float trackHeight = shapeSize.y - (2 * btnUpSize.y);
+
+	// Posição Y Mínima do indicador (após o botão Up)
+	float trackTop = btnUpSize.y;
+
+	// Altura máxima que o indicador pode se mover
+	float maxIndicatorMovement = trackHeight - indicatorHeight;
+
+	// Posição X (local)
+	float indicatorX = 0.f;
+
+	// Posição final Y (local)
+	float indicatorY = trackTop + (maxIndicatorMovement * perc);
+
+	indicatorShape.setPosition({indicatorX, indicatorY});
 }
 
 void gui::Scroll::scrollWheel(int delta)
@@ -67,13 +85,40 @@ void gui::Scroll::scrollWheel(int delta)
 
 void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 {
-	float trackTop = shape.getPosition().y;
-	float trackHeight = shape.getSize().y - indicatorShape.getSize().y;
+	sf::Vector2f scrollGlobalPos = getPosition();
+	sf::Vector2f btnUpSize = buttonUp->getGlobalBounds().size;
+	sf::Vector2f indicatorSize = indicatorShape.getSize();
 
-	float newY = mousePos.y - dragOffsetY;
-	newY = std::clamp(newY, trackTop, trackTop + trackHeight);
+	// Início da área de rolagem livre (Global)
+	float trackTopGlobal = scrollGlobalPos.y + btnUpSize.y;
+	// Altura da área de rolagem livre
+	float trackHeight = shape.getSize().y - (2 * btnUpSize.y);
 
-	float perc = (newY - trackTop) / trackHeight;
+	// 1. Calcular a Posição Y do TOPO do indicador
+	// Topo do Indicador Desejado = Mouse Y - Offset (distância do clique ao topo)
+	float indicatorTopDesired = mousePos.y - dragOffsetY;
+
+	// 2. Limites de Movimento para o TOPO do indicador.
+	// O topo do indicador não pode subir acima do topo da track.
+	float topLimit = trackTopGlobal;
+
+	// O topo do indicador não pode descer abaixo do topo da track + a altura total de movimento.
+	float bottomLimit = trackTopGlobal + trackHeight - indicatorSize.y;
+
+	// Clamp o topo do indicador
+	float clampedTopY = std::clamp(indicatorTopDesired, topLimit, bottomLimit);
+
+	// 3. Calcular a Porcentagem (Perc) a partir do TOPO (clampedTopY)
+	// Posição de Referência Zero: topLimit (representa 0% de rolagem)
+	float distanceMoved = clampedTopY - topLimit;
+
+	// Altura Máxima de Movimento
+	float maxMovement = bottomLimit - topLimit;
+
+	float perc = distanceMoved / maxMovement;
+	perc = std::clamp(perc, 0.f, 1.f); // Garante a precisão
+
+	// 4. Converter Porcentagem para o Valor
 	int range = std::max(1, maxValue - minValue);
 	int newVal = minValue + static_cast<int>(perc * range);
 
@@ -100,17 +145,26 @@ void gui::Scroll::draw(sf::RenderTarget &target, sf::RenderStates states) const
 
 void gui::Scroll::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
-	buttonUp->updateEvents(sfEvent, mousePos);
-	buttonDown->updateEvents(sfEvent, mousePos);
+	sf::Vector2f localMousePos = this->getInverseTransform().transformPoint(mousePos);
 
-	if (indicatorShape.getGlobalBounds().contains(mousePos))
+	buttonUp->updateEvents(sfEvent, localMousePos);
+	buttonDown->updateEvents(sfEvent, localMousePos);
+
+	sf::Transform indicatorTotalTransform = getTransform() * indicatorShape.getTransform();
+
+	sf::FloatRect indicatorGlobalBounds = indicatorTotalTransform.transformRect(indicatorShape.getLocalBounds());
+
+	if (indicatorGlobalBounds.contains(mousePos))
 	{
 		if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseButtonPressed>())
 		{
 			if (mouseEvent->button == sf::Mouse::Button::Left)
 			{
 				indicatorPressed = true;
-				dragOffsetY = mousePos.y - indicatorShape.getPosition().y;
+				sf::Vector2f indicatorTopGlobal = getTransform().transformPoint(
+					indicatorShape.getPosition());
+
+				dragOffsetY = mousePos.y - indicatorTopGlobal.y;
 			}
 		}
 	}
@@ -141,5 +195,6 @@ void gui::Scroll::update(const sf::Vector2f &mousePos)
 
 sf::FloatRect gui::Scroll::getGlobalBounds() const
 {
-	return shape.getGlobalBounds();
+	sf::FloatRect localBounds = shape.getLocalBounds();
+	return getTransform().transformRect(localBounds);
 }

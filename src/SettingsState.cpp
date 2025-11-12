@@ -83,7 +83,7 @@ void SettingsState::initGui()
 	select = std::make_unique<gui::Select>(sf::Vector2f(500.f, 200.f), sf::Vector2f(200.f, 100.f));
 
 	// SCROLL ====================================
-	scroll = std::make_unique<gui::Scroll>(sf::Vector2f(1000.f, 200.f), sf::Vector2f(20.f, 200.f));
+	scroll = std::make_unique<gui::Scroll>(sf::Vector2f(800.f, 200.f), sf::Vector2f(20.f, 200.f));
 }
 
 SettingsState::SettingsState(StateData &state_data)
