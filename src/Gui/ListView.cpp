@@ -61,11 +61,7 @@ sf::FloatRect gui::ListView::getLocalBounds() const
 	sf::FloatRect shapeArea = m_background.getTransform().transformRect(m_background.getLocalBounds());
 	sf::FloatRect scrollArea = m_scrollBar->getTransform().transformRect(m_scrollBar->getLocalBounds());
 
-	sf::FloatRect retu = RectUnion(
-		shapeArea,
-		scrollArea);
-
-	return retu;
+	return RectUnion(shapeArea, scrollArea);
 }
 
 void gui::ListView::draw(sf::RenderTarget &target, sf::RenderStates states) const
