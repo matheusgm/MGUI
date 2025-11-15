@@ -8,7 +8,7 @@ public:
 
     void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos);
     void update(const sf::Vector2f &mousePos);
-    virtual sf::FloatRect getGlobalBounds() const override;
+    virtual sf::FloatRect getLocalBounds() const override;
 
     void updateWithData(const Example &data, size_t index);
 

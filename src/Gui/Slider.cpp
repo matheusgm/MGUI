@@ -65,10 +65,9 @@ void gui::Slider::update(const sf::Vector2f &mousePos)
 {
 }
 
-sf::FloatRect gui::Slider::getGlobalBounds() const
+sf::FloatRect gui::Slider::getLocalBounds() const
 {
-	sf::FloatRect localBounds = backgroundShape.getLocalBounds();
-	return getTransform().transformRect(localBounds);
+	return backgroundShape.getLocalBounds();
 }
 
 void gui::Slider::setSize(const sf::Vector2f &newSize)

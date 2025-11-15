@@ -11,10 +11,12 @@ namespace gui
 		virtual void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) = 0;
 		virtual void update(const sf::Vector2f &mousePos) = 0;
 
-		virtual sf::FloatRect getGlobalBounds() const = 0;
+		virtual sf::FloatRect getLocalBounds() const = 0;
+		virtual sf::FloatRect getGlobalBounds() const { return getTransform().transformRect(getLocalBounds()); }
 		virtual void setSize(const sf::Vector2f &newSize) {}; // Optional to implement
 
 		bool contains(const sf::Vector2f &points) const { return getGlobalBounds().contains(points); }
+		sf::FloatRect RectUnion(const sf::FloatRect &a, const sf::FloatRect &b) const;
 
 		const float getTop() const { return getGlobalBounds().position.y; }
 		const float getBottom() const { return getGlobalBounds().position.y + getGlobalBounds().size.y; }

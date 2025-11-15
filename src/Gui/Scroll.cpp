@@ -92,10 +92,35 @@ void gui::Scroll::update(const sf::Vector2f &mousePos)
 	buttonDown->update(scrollLocalMousePos);
 }
 
-sf::FloatRect gui::Scroll::getGlobalBounds() const
+sf::FloatRect gui::Scroll::getLocalBounds() const
 {
-	sf::FloatRect localBounds = shape.getLocalBounds();
-	return getTransform().transformRect(localBounds);
+	sf::FloatRect shapeArea = shape.getTransform().transformRect(shape.getLocalBounds());
+	sf::FloatRect buttonUpArea = buttonUp->getTransform().transformRect(buttonUp->getLocalBounds());
+	sf::FloatRect buttonDownArea = buttonDown->getTransform().transformRect(buttonDown->getLocalBounds());
+
+	sf::FloatRect combinedBounds = RectUnion(
+		shapeArea,
+		buttonUpArea);
+
+	sf::FloatRect retu = RectUnion(
+		combinedBounds,
+		buttonDownArea);
+
+	// cout << "Scroll Local Bounds: " << retu.position.x << ", " << retu.position.y << ", "
+	// 	 << retu.size.x << ", " << retu.size.y << endl;
+
+	// cout << "Shape Local Bounds: " << shapeArea.position.x << ", " << shapeArea.position.y << ", "
+	// 	 << shapeArea.size.x << ", " << shapeArea.size.y << endl;
+
+	// cout << "Button Up Local Bounds: " << buttonUpArea.position.x << ", " << buttonUpArea.position.y << ", "
+	// 	 << buttonUpArea.size.x << ", " << buttonUpArea.size.y << endl;
+
+	// cout << "Button Down Local Bounds: " << buttonDownArea.position.x << ", " << buttonDownArea.position.y << ", "
+	// 	 << buttonDownArea.size.x << ", " << buttonDownArea.size.y << endl;
+
+	// cout << "----" << endl;
+
+	return retu;
 }
 
 void gui::Scroll::scrollWheel(int delta)

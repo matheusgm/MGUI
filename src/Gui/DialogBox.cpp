@@ -60,9 +60,9 @@ void gui::DialogBox::update(const sf::Vector2f &mousePos)
 		btn.update(mousePos);
 }
 
-sf::FloatRect gui::DialogBox::getGlobalBounds() const
+sf::FloatRect gui::DialogBox::getLocalBounds() const
 {
-	return shape.getGlobalBounds();
+	return shape.getLocalBounds();
 }
 
 void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
@@ -104,21 +104,6 @@ void gui::DialogBox::draw(sf::RenderTarget &target, sf::RenderStates states) con
 
 	for (auto &btn : buttons)
 		target.draw(btn, states);
-
-	// sf::Vertex verticalLine[2];
-	// verticalLine[0].position = sf::Vector2f(150.f, 0.f);
-	// verticalLine[0].color = sf::Color::Red;
-	// verticalLine[1].position = sf::Vector2f(150.f, 800.f);
-	// verticalLine[1].color = sf::Color::Red;
-
-	// sf::Vertex horizontalLine[2];
-	// horizontalLine[0].position = sf::Vector2f(0.f, 200.f);
-	// horizontalLine[0].color = sf::Color::Blue;
-	// horizontalLine[1].position = sf::Vector2f(1200.f, 200.f);
-	// horizontalLine[1].color = sf::Color::Blue;
-
-	// target.draw(verticalLine, 2, sf::PrimitiveType::Lines);
-	// target.draw(horizontalLine, 2, sf::PrimitiveType::Lines);
 }
 
 void gui::DialogBox::updateText(const std::string &textStr)
@@ -133,7 +118,7 @@ sf::Font &gui::DialogBox::loadFont()
 		defaultFont = std::make_unique<sf::Font>();
 		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
 			throw std::runtime_error("Failed to load default font!");
-	}
+	} 
 
 	return *defaultFont;
 }

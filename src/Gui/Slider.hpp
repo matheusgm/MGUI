@@ -14,7 +14,7 @@ namespace gui
 
 		void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
 		void update(const sf::Vector2f &mousePos) override;
-		virtual sf::FloatRect getGlobalBounds() const override;
+		virtual sf::FloatRect getLocalBounds() const override;
 		virtual void setSize(const sf::Vector2f &newSize) override;
 
 		int getValue() const { return value; };

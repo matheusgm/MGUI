@@ -5,7 +5,7 @@
 #include "ExampleListViewItem.hpp"
 
 SettingsState::SettingsState(StateData &state_data)
-	: State(state_data), soundText(font), soundValue(font)
+	: State(state_data), soundText(font), soundValue(font), debugLinePositionText(font, "", 16U)
 {
 	initVariables();
 	initKeybinds();
@@ -13,6 +13,9 @@ SettingsState::SettingsState(StateData &state_data)
 	onResizeWindow();
 
 	background.setFillColor(sf::Color::Cyan);
+
+	debugLinePositionText.setFillColor(sf::Color::Black);
+	debugLinePositionText.setPosition({5.f, 5.f});
 }
 
 void SettingsState::updateKeyboardInput(sf::Event &sfEvent)
@@ -86,6 +89,9 @@ void SettingsState::update(float dt)
 	updateMousePositions();
 
 	updateGui(dt);
+
+	debugLinePositionText.setString(std::to_string(mousePosWindow.x) + " " + std::to_string(mousePosWindow.y));
+	// debugLinePositionText.setPosition({mousePosWindow.x + 6.f, mousePosWindow.y - 20.f});
 }
 
 void SettingsState::renderGui(sf::RenderTarget &target) const
@@ -107,6 +113,23 @@ void SettingsState::render(sf::RenderTarget &target)
 	target.draw(background);
 
 	renderGui(target);
+
+	sf::Vertex verticalLine[2];
+	verticalLine[0].position = sf::Vector2f(mousePosView.x, 0.f);
+	verticalLine[0].color = sf::Color::Red;
+	verticalLine[1].position = sf::Vector2f(mousePosView.x, 800.f);
+	verticalLine[1].color = sf::Color::Red;
+
+	sf::Vertex horizontalLine[2];
+	horizontalLine[0].position = sf::Vector2f(0.f, mousePosView.y);
+	horizontalLine[0].color = sf::Color::Blue;
+	horizontalLine[1].position = sf::Vector2f(1200.f, mousePosView.y);
+	horizontalLine[1].color = sf::Color::Blue;
+
+	target.draw(verticalLine, 2, sf::PrimitiveType::Lines);
+	target.draw(horizontalLine, 2, sf::PrimitiveType::Lines);
+
+	target.draw(debugLinePositionText);
 }
 
 void SettingsState::initVariables()

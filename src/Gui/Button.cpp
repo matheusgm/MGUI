@@ -114,17 +114,9 @@ void gui::Button::update(const sf::Vector2f &mousePos)
 	}
 }
 
-sf::FloatRect gui::Button::getGlobalBounds() const
+sf::FloatRect gui::Button::getLocalBounds() const
 {
-	// With Shape Outline Thickness
-	// sf::FloatRect localBounds = shape.getLocalBounds();
-	// return getTransform().transformRect(localBounds);
-
-	// Without Shape Outline Thickness
-	sf::Vector2f globalPos = getPosition();
-	sf::Vector2f size = shape.getSize();
-
-	return sf::FloatRect({globalPos.x, globalPos.y}, {size.x, size.y});
+	return shape.getLocalBounds();
 }
 
 void gui::Button::setText(const std::string &textStr)

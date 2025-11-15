@@ -33,6 +33,8 @@ private:
     std::unique_ptr<gui::Select> select;
     std::unique_ptr<gui::Scroll> scroll;
 
+    sf::Text debugLinePositionText;
+
     // std::vector<sf::VideoMode> modes;
 
     void initVariables();

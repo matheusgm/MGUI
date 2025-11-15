@@ -19,10 +19,9 @@ void gui::Select::update(const sf::Vector2f &mousePos)
 {
 }
 
-sf::FloatRect gui::Select::getGlobalBounds() const
+sf::FloatRect gui::Select::getLocalBounds() const
 {
-	sf::FloatRect localBounds = shape.getLocalBounds();
-	return getTransform().transformRect(localBounds);
+	return shape.getLocalBounds();
 }
 
 void gui::Select::draw(sf::RenderTarget &target, sf::RenderStates states) const

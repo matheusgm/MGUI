@@ -20,10 +20,9 @@ void ExampleListViewItem::update(const sf::Vector2f &mousePos)
 {
 }
 
-sf::FloatRect ExampleListViewItem::getGlobalBounds() const
+sf::FloatRect ExampleListViewItem::getLocalBounds() const
 {
-    sf::FloatRect localBounds = m_background.getLocalBounds();
-    return getTransform().transformRect(localBounds);
+    return m_background.getLocalBounds();
 }
 
 void ExampleListViewItem::updateWithData(const Example &data, size_t index)

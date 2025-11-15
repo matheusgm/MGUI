@@ -14,7 +14,7 @@ namespace gui
         void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
         void update(const sf::Vector2f &mousePos) override;
 
-        virtual sf::FloatRect getGlobalBounds() const override;
+        virtual sf::FloatRect getLocalBounds() const override;
 
         void loadNode(const std::shared_ptr<DialogNode> &node);
         void setChoiceCallback(std::function<void(const std::string &)> callback) { choiceCallback = std::move(callback); };
