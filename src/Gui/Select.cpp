@@ -1,15 +1,8 @@
 #include "../stdafx.hpp"
 #include "Select.hpp"
 
-void gui::Select::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-	states.transform *= this->getTransform();
-
-	target.draw(shape, states);
-}
-
 gui::Select::Select(sf::Vector2f position, sf::Vector2f size)
-	: GuiElement(position, size)
+	: GuiElement(position)
 {
 	// Shape
 	shape.setSize(size);
@@ -30,4 +23,11 @@ sf::FloatRect gui::Select::getGlobalBounds() const
 {
 	sf::FloatRect localBounds = shape.getLocalBounds();
 	return getTransform().transformRect(localBounds);
+}
+
+void gui::Select::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	states.transform *= this->getTransform();
+
+	target.draw(shape, states);
 }

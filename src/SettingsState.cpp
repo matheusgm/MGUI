@@ -4,88 +4,6 @@
 #include "Gui/ListViewAdapter.tpp"
 #include "ExampleListViewItem.hpp"
 
-void SettingsState::initVariables()
-{
-	// modes = sf::VideoMode::getFullscreenModes();
-}
-
-void SettingsState::initKeybinds()
-{
-
-	std::ifstream ifs("src/Config/mainmenustate_keybinds.ini");
-
-	if (ifs.is_open())
-	{
-		std::string key = "";
-		std::string key2 = "";
-
-		while (ifs >> key >> key2)
-			keybinds[key] = data.supportedKeys->at(key2);
-	}
-
-	ifs.close();
-}
-
-void SettingsState::initGui()
-{
-	buttons["BACK"] = std::make_unique<gui::Button>(
-		sf::Vector2f(100.f, 100.f),
-		sf::Vector2f(150.f, 50.f),
-		&font, "Back", 32);
-
-	buttons["APPLY"] = std::make_unique<gui::Button>(
-		sf::Vector2f(100.f, 200.f),
-		sf::Vector2f(150.f, 50.f),
-		&font, "Apply", 32);
-
-	// Button functionality
-	// Quit the game
-	buttons["BACK"]->onPressed([this]
-							   { endState(); });
-
-	/*std::vector<std::string> modes_str;
-	for (auto& i : modes) {
-		modes_str.push_back(std::to_string(i.width) + 'x' + std::to_string(i.height));
-	}*/
-
-	// SOUND ====================================
-	soundText.setFillColor(sf::Color::Black);
-	soundText.setCharacterSize(32);
-	soundText.setString("Sound:");
-	soundText.setFont(font);
-
-	soundSlider = std::make_unique<gui::Slider>(sf::Vector2f(100.f, 100.f), sf::Vector2f(250.f, 16.f), 0, 100, 50);
-	soundSlider->onValueChange(
-		[this]
-		{ soundValue.setString(std::to_string(soundSlider->getValue()) + "%"); });
-
-	soundValue.setFillColor(sf::Color::Black);
-	soundValue.setCharacterSize(32);
-	soundValue.setString(std::to_string(soundSlider->getValue()) + "%");
-	soundValue.setFont(font);
-
-	// LIST VIEW ====================================
-
-	std::vector<Example> todosOsProdutos;
-	for (int i = 0; i < 20; ++i)
-	{
-		todosOsProdutos.emplace_back(Example("#" + std::to_string(i),
-											 100.0f + i * 0.5f,
-											 (i % 100 == 0) ? 0 : 5));
-	}
-
-	float itemHeight = 60.0f;
-	auto produtoAdapter = std::make_unique<gui::ListViewAdapter<Example, ExampleListViewItem>>(std::move(todosOsProdutos), font, itemHeight);
-
-	listView = std::make_unique<gui::ListView>(sf::Vector2f(200.f, 200.f), sf::Vector2f(200.f, 300.f), std::move(produtoAdapter));
-
-	// SELECT ====================================
-	select = std::make_unique<gui::Select>(sf::Vector2f(500.f, 200.f), sf::Vector2f(200.f, 100.f));
-
-	// SCROLL ====================================
-	scroll = std::make_unique<gui::Scroll>(sf::Vector2f(800.f, 200.f), sf::Vector2f(20.f, 200.f));
-}
-
 SettingsState::SettingsState(StateData &state_data)
 	: State(state_data), soundText(font), soundValue(font)
 {
@@ -189,4 +107,86 @@ void SettingsState::render(sf::RenderTarget &target)
 	target.draw(background);
 
 	renderGui(target);
+}
+
+void SettingsState::initVariables()
+{
+	// modes = sf::VideoMode::getFullscreenModes();
+}
+
+void SettingsState::initKeybinds()
+{
+
+	std::ifstream ifs("src/Config/mainmenustate_keybinds.ini");
+
+	if (ifs.is_open())
+	{
+		std::string key = "";
+		std::string key2 = "";
+
+		while (ifs >> key >> key2)
+			keybinds[key] = data.supportedKeys->at(key2);
+	}
+
+	ifs.close();
+}
+
+void SettingsState::initGui()
+{
+	buttons["BACK"] = std::make_unique<gui::Button>(
+		sf::Vector2f(100.f, 100.f),
+		sf::Vector2f(150.f, 50.f),
+		&font, "Back", 32);
+
+	buttons["APPLY"] = std::make_unique<gui::Button>(
+		sf::Vector2f(100.f, 200.f),
+		sf::Vector2f(150.f, 50.f),
+		&font, "Apply", 32);
+
+	// Button functionality
+	// Quit the game
+	buttons["BACK"]->onPressed([this]
+							   { endState(); });
+
+	/*std::vector<std::string> modes_str;
+	for (auto& i : modes) {
+		modes_str.push_back(std::to_string(i.width) + 'x' + std::to_string(i.height));
+	}*/
+
+	// SOUND ====================================
+	soundText.setFillColor(sf::Color::Black);
+	soundText.setCharacterSize(32);
+	soundText.setString("Sound:");
+	soundText.setFont(font);
+
+	soundSlider = std::make_unique<gui::Slider>(sf::Vector2f(100.f, 100.f), sf::Vector2f(250.f, 16.f), 0, 100, 50);
+	soundSlider->onValueChange(
+		[this]
+		{ soundValue.setString(std::to_string(soundSlider->getValue()) + "%"); });
+
+	soundValue.setFillColor(sf::Color::Black);
+	soundValue.setCharacterSize(32);
+	soundValue.setString(std::to_string(soundSlider->getValue()) + "%");
+	soundValue.setFont(font);
+
+	// LIST VIEW ====================================
+
+	std::vector<Example> todosOsProdutos;
+	for (int i = 0; i < 20; ++i)
+	{
+		todosOsProdutos.emplace_back(Example("#" + std::to_string(i),
+											 100.0f + i * 0.5f,
+											 (i % 100 == 0) ? 0 : 5));
+	}
+
+	float itemHeight = 60.0f;
+	auto produtoAdapter = std::make_unique<gui::ListViewAdapter<Example, ExampleListViewItem>>(std::move(todosOsProdutos), font, itemHeight);
+
+	listView = std::make_unique<gui::ListView>(sf::Vector2f(200.f, 200.f), sf::Vector2f(200.f, 300.f), std::move(produtoAdapter));
+
+	// SELECT ====================================
+	select = std::make_unique<gui::Select>(sf::Vector2f(500.f, 200.f), sf::Vector2f(200.f, 100.f));
+
+	// SCROLL ====================================
+	scroll = std::make_unique<gui::Scroll>(sf::Vector2f(800.f, 200.f), sf::Vector2f(20.f, 200.f));
 }

@@ -2,6 +2,79 @@
 #include "DialogBoxState.hpp"
 #include "Gui/DialogTree.hpp"
 
+DialogBoxState::DialogBoxState(StateData &state_data)
+	: State(state_data)
+{
+	initVariables();
+	initKeybinds();
+	initGui();
+	onResizeWindow();
+
+	background.setFillColor(sf::Color::Green);
+}
+
+void DialogBoxState::updateKeyboardInput(sf::Event &sfEvent)
+{
+}
+
+void DialogBoxState::updateEvents(sf::Event &sfEvent)
+{
+	updateKeyboardInput(sfEvent);
+	for (auto &it : buttons)
+		it.second->updateEvents(sfEvent, mousePosView);
+
+	dialogBox->updateEvents(sfEvent, mousePosView);
+}
+
+void DialogBoxState::onResizeWindow()
+{
+	sf::Vector2f window_center = getWindowCenter();
+	sf::Vector2u window_size = data.window->getSize();
+
+	float gap = 50.f;
+
+	// Background
+	background.setSize(
+		sf::Vector2f(
+			static_cast<float>(window_size.x),
+			static_cast<float>(window_size.y)));
+
+	// Buttons
+	buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
+}
+
+void DialogBoxState::updateGui(float dt) const
+{
+	/* Updates all the gui in the state and handles their functionality */
+	// Buttons
+	for (auto &it : buttons)
+		it.second->update(mousePosView);
+
+	dialogBox->update(mousePosView);
+}
+
+void DialogBoxState::update(float dt)
+{
+	updateMousePositions();
+
+	updateGui(dt);
+}
+
+void DialogBoxState::renderGui(sf::RenderTarget &target) const
+{
+	for (auto &it : buttons)
+		target.draw(*it.second);
+
+	target.draw(*dialogBox);
+}
+
+void DialogBoxState::render(sf::RenderTarget &target)
+{
+	target.draw(background);
+
+	renderGui(target);
+}
+
 void DialogBoxState::initVariables()
 {
 	// modes = sf::VideoMode::getFullscreenModes();
@@ -90,77 +163,4 @@ void DialogBoxState::initGui()
 			dialogBox->setText(dialogTexts[currentDialogIndex]);
 		}
 		});*/
-}
-
-DialogBoxState::DialogBoxState(StateData &state_data)
-	: State(state_data)
-{
-	initVariables();
-	initKeybinds();
-	initGui();
-	onResizeWindow();
-
-	background.setFillColor(sf::Color::Green);
-}
-
-void DialogBoxState::updateKeyboardInput(sf::Event &sfEvent)
-{
-}
-
-void DialogBoxState::updateEvents(sf::Event &sfEvent)
-{
-	updateKeyboardInput(sfEvent);
-	for (auto &it : buttons)
-		it.second->updateEvents(sfEvent, mousePosView);
-
-	dialogBox->updateEvents(sfEvent, mousePosView);
-}
-
-void DialogBoxState::onResizeWindow()
-{
-	sf::Vector2f window_center = getWindowCenter();
-	sf::Vector2u window_size = data.window->getSize();
-
-	float gap = 50.f;
-
-	// Background
-	background.setSize(
-		sf::Vector2f(
-			static_cast<float>(window_size.x),
-			static_cast<float>(window_size.y)));
-
-	// Buttons
-	buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
-}
-
-void DialogBoxState::updateGui(float dt) const
-{
-	/* Updates all the gui in the state and handles their functionality */
-	// Buttons
-	for (auto &it : buttons)
-		it.second->update(mousePosView);
-
-	dialogBox->update(mousePosView);
-}
-
-void DialogBoxState::update(float dt)
-{
-	updateMousePositions();
-
-	updateGui(dt);
-}
-
-void DialogBoxState::renderGui(sf::RenderTarget &target) const
-{
-	for (auto &it : buttons)
-		target.draw(*it.second);
-
-	target.draw(*dialogBox);
-}
-
-void DialogBoxState::render(sf::RenderTarget &target)
-{
-	target.draw(background);
-
-	renderGui(target);
 }

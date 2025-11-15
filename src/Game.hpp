@@ -2,47 +2,40 @@
 
 #include "MainMenuState.hpp"
 
-class Game{
+class Game
+{
+public:
+    Game();
+    virtual ~Game() = default;
+
+    void updateDt();
+    void updateSFMLEvents();
+    void update();
+
+    void render();
+
+    void run();
+
+    void endApplication();
+
 private:
-    // Variables
     GraphicsSettings gfxSettings;
     StateData stateData;
-    
+
     sf::Clock dtClock;
-    float dt = 0.f;
-    
+
     std::unique_ptr<sf::RenderWindow> window;
     std::stack<std::unique_ptr<State>> states;
 
     std::map<std::string, int> supportedKeys;
 
+    float dt = 0.f;
     float gridSize = 100.f;
 
-    // Initialization
     void initVariables();
     void initGraphicsSettings();
     void initWindow();
     void initKeys();
     void initStateData();
     void initStates();
-    
-
-public: 
-    // Constructors / Destructors
-    Game();
-    virtual ~Game() = default;;
-
-    // Regular
-    void endApplication();
-
-    // Update
-    void updateDt();
-    void updateSFMLEvents();
-    void update();
-
-    // Render
-    void render();
-
-    // Core
-    void run();
 };

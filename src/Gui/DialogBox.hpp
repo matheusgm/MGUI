@@ -7,6 +7,21 @@ namespace gui
 {
     class DialogBox : public GuiElement
     {
+    public:
+        DialogBox(sf::Vector2f position, sf::Vector2f size);
+        virtual ~DialogBox() = default;
+
+        void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
+        void update(const sf::Vector2f &mousePos) override;
+
+        virtual sf::FloatRect getGlobalBounds() const override;
+
+        void loadNode(const std::shared_ptr<DialogNode> &node);
+        void setChoiceCallback(std::function<void(const std::string &)> callback) { choiceCallback = std::move(callback); };
+
+    protected:
+        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
+
     private:
         sf::RectangleShape shape;
         sf::Text text;
@@ -23,18 +38,5 @@ namespace gui
         // Helpers
         void updateText(const std::string &textStr);
         static sf::Font &loadFont();
-        virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
-
-    public:
-        DialogBox(sf::Vector2f position, sf::Vector2f size);
-        virtual ~DialogBox() = default;
-
-        void loadNode(const std::shared_ptr<DialogNode>& node);
-        void setChoiceCallback(std::function<void(const std::string &)> callback) { choiceCallback = std::move(callback); };
-
-        // Herdado por meio de GuiElement
-        void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
-        void update(const sf::Vector2f &mousePos) override;
-        virtual sf::FloatRect getGlobalBounds() const override;
     };
 }

@@ -11,11 +11,6 @@ namespace gui
     {
         static_assert(std::is_base_of_v<ListViewItem, U>, "O parâmetro U deve herdar de ListViewItem.");
 
-    private:
-        const std::vector<T> m_data;
-        const sf::Font &m_font;
-        const float m_height;
-
     public:
         ListViewAdapter(const std::vector<T> data, const sf::Font &font, float itemHeight)
             : m_data(data), m_font(font), m_height(itemHeight) {}
@@ -33,10 +28,13 @@ namespace gui
             if (index < m_data.size())
             {
                 if (U *concreteView = dynamic_cast<U *>(&view))
-                {
                     concreteView->updateWithData(m_data[index], index);
-                }
             }
         }
+
+    private:
+        const std::vector<T> m_data;
+        const sf::Font &m_font;
+        const float m_height;
     };
 }

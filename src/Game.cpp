@@ -1,9 +1,95 @@
 #include "stdafx.hpp"
 #include "Game.hpp"
 
-// Static functions
+Game::Game()
+{
+	initVariables();
+	initGraphicsSettings();
+	initWindow();
+	initKeys();
+	initStateData();
+	initStates();
+}
 
-// Initializer functions
+void Game::updateDt()
+{
+	dt = dtClock.restart().asSeconds();
+}
+
+void Game::updateSFMLEvents()
+{
+	while (std::optional event = window->pollEvent())
+	{
+		if (event->is<sf::Event::Closed>())
+		{
+			window->close();
+		}
+		else if (event->is<sf::Event::Resized>())
+		{
+			auto resized = event->getIf<sf::Event::Resized>();
+			sf::FloatRect visibleArea({0.f, 0.f}, {static_cast<float>(resized->size.x), static_cast<float>(resized->size.y)});
+			window->setView(sf::View(visibleArea));
+			gfxSettings.resolution.size.x = resized->size.x;
+			gfxSettings.resolution.size.y = resized->size.y;
+			if (!states.empty())
+			{
+				states.top()->onResizeWindow();
+			}
+		}
+		if (!states.empty())
+			states.top()->updateEvents(*event);
+	}
+}
+
+void Game::update()
+{
+	updateSFMLEvents();
+
+	if (!states.empty())
+	{
+		states.top()->update(dt);
+
+		if (states.top()->getQuit())
+		{
+			states.top()->endState();
+			states.pop();
+			if (!states.empty())
+			{ // Rever, talvez poderia ser bom uma verificação para saber se precisa atualizar
+				states.top()->onResizeWindow();
+			}
+		}
+	}
+	else
+	{
+		endApplication();
+		window->close();
+	}
+}
+
+void Game::render()
+{
+	window->clear();
+
+	if (!states.empty())
+		states.top()->render(*window);
+
+	window->display();
+}
+
+void Game::run()
+{
+	while (window->isOpen())
+	{
+		updateDt();
+		update();
+		render();
+	}
+}
+
+void Game::endApplication()
+{
+	std::cout << "Ending Application!" << "\n";
+}
 
 void Game::initVariables()
 {
@@ -17,7 +103,8 @@ void Game::initGraphicsSettings()
 	gfxSettings.loadFromFile("src/Config/graphics.ini");
 }
 
-void Game::initWindow(){
+void Game::initWindow()
+{
 
 	/* Create a SFML window */
 	if (gfxSettings.fullscreen)
@@ -26,8 +113,7 @@ void Game::initWindow(){
 			gfxSettings.resolution,
 			gfxSettings.title,
 			sf::State::Fullscreen,
-			gfxSettings.contextSettings
-		);
+			gfxSettings.contextSettings);
 	}
 	else
 	{
@@ -35,25 +121,25 @@ void Game::initWindow(){
 			gfxSettings.resolution,
 			gfxSettings.title,
 			sf::State::Windowed,
-			gfxSettings.contextSettings
-		);
+			gfxSettings.contextSettings);
 	}
 
 	window->setFramerateLimit(gfxSettings.frameRateLimit);
 	window->setVerticalSyncEnabled(gfxSettings.verticalSync);
 }
 
-
 void Game::initKeys()
 {
 
 	std::ifstream ifs("src/Config/supported_keys.ini");
 
-	if (ifs.is_open()) {
+	if (ifs.is_open())
+	{
 		std::string key = "";
 		int key_value = 0;
 
-		while (ifs >> key >> key_value) {
+		while (ifs >> key >> key_value)
+		{
 			supportedKeys[key] = key_value;
 		}
 	}
@@ -61,10 +147,10 @@ void Game::initKeys()
 	ifs.close();
 
 	// DEBUG REMOVE LATER!
-	for (auto i : supportedKeys) {
+	for (auto i : supportedKeys)
+	{
 		std::cout << i.first << " " << i.second << "\n";
 	}
-	
 }
 
 void Game::initStateData()
@@ -80,97 +166,3 @@ void Game::initStates()
 {
 	states.push(std::make_unique<MainMenuState>(stateData));
 }
-
-
-// Constructors / Destructors
-Game::Game(){
-	initVariables();
-	initGraphicsSettings();
-	initWindow();
-	initKeys();
-	initStateData();
-	initStates();
-
-}
-
-void Game::endApplication()
-{
-	std::cout << "Ending Application!" << "\n";
-}
-
-
-void Game::updateDt()
-{
-	dt = dtClock.restart().asSeconds();
-
-}
-
-void Game::updateSFMLEvents()
-{
-	while (std::optional event = window->pollEvent()) {
-		if (event->is<sf::Event::Closed>()) {
-			window->close();
-		}else if (event->is<sf::Event::Resized>()) {
-			// resize my view
-			auto resized = event->getIf<sf::Event::Resized>();
-			sf::FloatRect visibleArea({0.f, 0.f}, {static_cast<float>(resized->size.x), static_cast<float>(resized->size.y)});
-			window->setView(sf::View(visibleArea));
-			gfxSettings.resolution.size.x = resized->size.x;
-			gfxSettings.resolution.size.y = resized->size.y;
-			if (!states.empty()) {
-				states.top()->onResizeWindow();
-			}
-		}
-		if (!states.empty()) {
-			states.top()->updateEvents(*event);
-		}
-	}
-}
-
-void Game::update()
-{
-	updateSFMLEvents();
-
-	if (!states.empty()) {
-		states.top()->update(dt);
-		
-		if (states.top()->getQuit()) {
-			states.top()->endState();
-			states.pop();
-			if (!states.empty()) { // Rever, talvez poderia ser bom uma verifica��o para saber se precisa atualizar
-				states.top()->onResizeWindow();
-			}
-		}
-	}
-	// Application end
-	else {
-		endApplication();
-		window->close();
-	}
-
-	
-
-}
-
-void Game::render()
-{
-	window->clear();
-
-	// Render items
-	if (!states.empty()) {
-		states.top()->render(*window);
-	}
-
-	window->display();
-}
-
-void Game::run()
-{
-	while (window->isOpen()) {
-		updateDt();
-		update();
-		render();
-	}
-}
-
-

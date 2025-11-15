@@ -4,7 +4,7 @@
 std::unique_ptr<sf::Font> gui::DialogBox::defaultFont;
 
 gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
-	: GuiElement(position, size),
+	: GuiElement(position),
 	  text(loadFont())
 {
 	// Shape
@@ -24,21 +24,73 @@ gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
 		{100.f, 25.f}, "Close", 16U);
 }
 
-void gui::DialogBox::updateText(const std::string &textStr)
-{
-	text.setString(textStr);
-};
+// gui::DialogBox* gui::DialogBox::CreateOkDialog(float x, float y, float w, float h) {
+//	std::map<std::string, gui::Button*> buttons;
+//	buttons["OK"] = new gui::Button(w - 90.f, h - 32.f, 80.f, 24.f, "Ok", 20U);
+//	return new DialogBox(x, y, w, h, buttons);
+// }
+//
+// gui::DialogBox* gui::DialogBox::CreateYesNoDialog(float x, float y, float w, float h) {
+//	std::map<std::string, gui::Button*> buttons;
+//	buttons["YES"] = new gui::Button(w - 80.f - 100.f, h - 32.f, 80.f, 24.f, "Yes", 20U);
+//	buttons["NO"] = new gui::Button(w - 90.f, h - 32.f, 80.f, 24.f, "No", 20U);
+//	return new DialogBox(x, y, w, h, buttons);
+// }
+//
+// gui::DialogBox* gui::DialogBox::CreateNextPrevDialog(float x, float y, float w, float h) {
+//	std::map<std::string, gui::Button*> buttons;
+//	buttons["PREVIOUS"] = new gui::Button(w - 80.f - 100.f, h - 32.f, 80.f, 24.f, "Previous", 20U);
+//	buttons["NEXT"] = new gui::Button(w - 90.f, h - 32.f, 80.f, 24.f, "Next", 20U);
+//	return new DialogBox(x, y, w, h, buttons);
+// }
 
-sf::Font &gui::DialogBox::loadFont()
+void gui::DialogBox::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
-	if (!defaultFont)
+	closeButton.updateEvents(sfEvent, mousePos);
+
+	for (auto &btn : buttons)
+		btn.updateEvents(sfEvent, mousePos);
+}
+
+void gui::DialogBox::update(const sf::Vector2f &mousePos)
+{
+	closeButton.update(mousePos);
+
+	for (auto &btn : buttons)
+		btn.update(mousePos);
+}
+
+sf::FloatRect gui::DialogBox::getGlobalBounds() const
+{
+	return shape.getGlobalBounds();
+}
+
+void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
+{
+	dialogType = node->type;
+	updateText(node->message);
+
+	buttons.clear();
+	buttons.reserve(node->options.size());
+
+	constexpr float btnWidth = 100.f;
+	constexpr float btnHeight = 30.f;
+	constexpr float btnSpacing = 10.f;
+	constexpr float margin = 10.f;
+
+	const float totalWidth = node->options.size() * (btnWidth + btnSpacing) - btnSpacing;
+
+	float x = shape.getPosition().x + shape.getSize().x - totalWidth - margin;
+	float y = shape.getPosition().y + shape.getSize().y - btnHeight - margin;
+
+	for (const auto &[label, _] : node->options)
 	{
-		defaultFont = std::make_unique<sf::Font>();
-		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
-			throw std::runtime_error("Failed to load default font!");
+		gui::Button btn({x, y}, {btnWidth, btnHeight}, label);
+		btn.onPressed([this, label]()
+					  { if (choiceCallback) choiceCallback(label); });
+		buttons.emplace_back(std::move(btn));
+		x += btnWidth + btnSpacing;
 	}
-
-	return *defaultFont;
 }
 
 void gui::DialogBox::draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -69,71 +121,19 @@ void gui::DialogBox::draw(sf::RenderTarget &target, sf::RenderStates states) con
 	// target.draw(horizontalLine, 2, sf::PrimitiveType::Lines);
 }
 
-// gui::DialogBox* gui::DialogBox::CreateOkDialog(float x, float y, float w, float h) {
-//	std::map<std::string, gui::Button*> buttons;
-//	buttons["OK"] = new gui::Button(w - 90.f, h - 32.f, 80.f, 24.f, "Ok", 20U);
-//	return new DialogBox(x, y, w, h, buttons);
-// }
-//
-// gui::DialogBox* gui::DialogBox::CreateYesNoDialog(float x, float y, float w, float h) {
-//	std::map<std::string, gui::Button*> buttons;
-//	buttons["YES"] = new gui::Button(w - 80.f - 100.f, h - 32.f, 80.f, 24.f, "Yes", 20U);
-//	buttons["NO"] = new gui::Button(w - 90.f, h - 32.f, 80.f, 24.f, "No", 20U);
-//	return new DialogBox(x, y, w, h, buttons);
-// }
-//
-// gui::DialogBox* gui::DialogBox::CreateNextPrevDialog(float x, float y, float w, float h) {
-//	std::map<std::string, gui::Button*> buttons;
-//	buttons["PREVIOUS"] = new gui::Button(w - 80.f - 100.f, h - 32.f, 80.f, 24.f, "Previous", 20U);
-//	buttons["NEXT"] = new gui::Button(w - 90.f, h - 32.f, 80.f, 24.f, "Next", 20U);
-//	return new DialogBox(x, y, w, h, buttons);
-// }
-
-void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
+void gui::DialogBox::updateText(const std::string &textStr)
 {
-	dialogType = node->type;
-	updateText(node->message);
+	text.setString(textStr);
+};
 
-	buttons.clear();
-	buttons.reserve(node->options.size());
-
-	constexpr float btnWidth = 100.f;
-	constexpr float btnHeight = 30.f;
-	constexpr float btnSpacing = 10.f;
-	constexpr float margin = 10.f;
-
-	const float totalWidth = node->options.size() * (btnWidth + btnSpacing) - btnSpacing;
-
-	float x = shape.getPosition().x + shape.getSize().x - totalWidth - margin;
-	float y = shape.getPosition().y + shape.getSize().y - btnHeight - margin;
-
-	for (const auto &[label, _] : node->options)
+sf::Font &gui::DialogBox::loadFont()
+{
+	if (!defaultFont)
 	{
-		gui::Button btn({x, y}, {btnWidth, btnHeight}, label);
-		btn.onPressed([this, label]()
-					  { if (choiceCallback) choiceCallback(label); });
-		buttons.emplace_back(std::move(btn));
-		x += btnWidth + btnSpacing;
+		defaultFont = std::make_unique<sf::Font>();
+		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
+			throw std::runtime_error("Failed to load default font!");
 	}
-}
 
-void gui::DialogBox::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
-{
-	closeButton.updateEvents(sfEvent, mousePos);
-
-	for (auto &btn : buttons)
-		btn.updateEvents(sfEvent, mousePos);
-}
-
-void gui::DialogBox::update(const sf::Vector2f &mousePos)
-{
-	closeButton.update(mousePos);
-
-	for (auto &btn : buttons)
-		btn.update(mousePos);
-}
-
-sf::FloatRect gui::DialogBox::getGlobalBounds() const
-{
-	return shape.getGlobalBounds();
+	return *defaultFont;
 }

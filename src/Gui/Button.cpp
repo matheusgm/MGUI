@@ -8,7 +8,7 @@ gui::Button::Button(sf::Vector2f position, sf::Vector2f size,
 					sf::Color textNormal, sf::Color textHover, sf::Color textPressed,
 					sf::Color normal, sf::Color hover, sf::Color pressed,
 					sf::Color outlineNormal, sf::Color outlineHover, sf::Color outlinePressed,
-					short unsigned id) : GuiElement(position, size),
+					short unsigned id) : GuiElement(position),
 										 text(loadFont(font), textStr),
 										 buttonState(ButtonState::NORMAL),
 										 id(id),
@@ -37,65 +37,6 @@ gui::Button::Button(sf::Vector2f position, sf::Vector2f size,
 	setText(textStr);
 }
 
-sf::Font &gui::Button::loadFont(sf::Font *font)
-{
-	if (font)
-		return *font;
-
-	if (!defaultFont)
-	{
-		defaultFont = std::make_unique<sf::Font>();
-		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
-			throw std::runtime_error("Failed to load default font!");
-	}
-
-	return *defaultFont;
-}
-
-void gui::Button::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-	states.transform *= this->getTransform();
-
-	target.draw(shape, states);
-	target.draw(text, states);
-}
-
-// Modifier
-void gui::Button::setText(const std::string &textStr)
-{
-	text.setString(textStr);
-	auto bounds = text.getLocalBounds();
-	text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
-	text.setPosition({shape.getSize().x / 2.f, shape.getSize().y / 2.f});
-}
-
-void gui::Button::setDisabled(bool disable)
-{
-	buttonState = disable ? ButtonState::DISABLED : ButtonState::NORMAL;
-}
-
-sf::FloatRect gui::Button::getGlobalBounds() const
-{
-	// With Shape Outline Thickness
-	sf::FloatRect localBounds = shape.getLocalBounds();
-	return getTransform().transformRect(localBounds);
-
-	// Without Shape Outline Thickness
-	// sf::Vector2f globalPos = this->getPosition();
-
-	// sf::Vector2f size = shape.getSize();
-
-	// return sf::FloatRect({globalPos.x, globalPos.y}, {size.x, size.y});
-}
-
-bool gui::Button::isHovered(const sf::Vector2f &mousePos) const
-{
-	sf::FloatRect boundsSpace = getTransform().transformRect(shape.getLocalBounds());
-
-	return boundsSpace.contains(mousePos);
-}
-
-// Functions
 void gui::Button::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
 	if (buttonState == ButtonState::DISABLED)
@@ -171,4 +112,60 @@ void gui::Button::update(const sf::Vector2f &mousePos)
 		shape.setOutlineColor(sf::Color::Green);
 		break;
 	}
+}
+
+sf::FloatRect gui::Button::getGlobalBounds() const
+{
+	// With Shape Outline Thickness
+	// sf::FloatRect localBounds = shape.getLocalBounds();
+	// return getTransform().transformRect(localBounds);
+
+	// Without Shape Outline Thickness
+	sf::Vector2f globalPos = getPosition();
+	sf::Vector2f size = shape.getSize();
+
+	return sf::FloatRect({globalPos.x, globalPos.y}, {size.x, size.y});
+}
+
+void gui::Button::setText(const std::string &textStr)
+{
+	text.setString(textStr);
+	auto bounds = text.getLocalBounds();
+	text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
+	text.setPosition({shape.getSize().x / 2.f, shape.getSize().y / 2.f});
+}
+
+void gui::Button::setDisabled(bool disable)
+{
+	buttonState = disable ? ButtonState::DISABLED : ButtonState::NORMAL;
+}
+
+void gui::Button::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	states.transform *= this->getTransform();
+
+	target.draw(shape, states);
+	target.draw(text, states);
+}
+
+bool gui::Button::isHovered(const sf::Vector2f &mousePos) const
+{
+	sf::FloatRect boundsSpace = getTransform().transformRect(shape.getLocalBounds());
+
+	return boundsSpace.contains(mousePos);
+}
+
+sf::Font &gui::Button::loadFont(sf::Font *font)
+{
+	if (font)
+		return *font;
+
+	if (!defaultFont)
+	{
+		defaultFont = std::make_unique<sf::Font>();
+		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
+			throw std::runtime_error("Failed to load default font!");
+	}
+
+	return *defaultFont;
 }

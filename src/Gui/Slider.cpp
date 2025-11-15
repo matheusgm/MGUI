@@ -3,11 +3,12 @@
 
 gui::Slider::Slider(sf::Vector2f position, sf::Vector2f size,
 					int min_value, int max_value, int default_value, int step,
-					sf::Color background_color, sf::Color foreground_color, sf::Color indicator_color) : GuiElement(position, size),
-																										 step(step),
-																										 minValue(min_value),
-																										 maxValue(max_value),
-																										 value(default_value)
+					sf::Color background_color, sf::Color foreground_color,
+					sf::Color indicator_color) : GuiElement(position),
+												 step(step),
+												 minValue(min_value),
+												 maxValue(max_value),
+												 value(default_value)
 {
 	// Background Shape
 	backgroundShape.setSize(size);
@@ -26,58 +27,6 @@ gui::Slider::Slider(sf::Vector2f position, sf::Vector2f size,
 	indicatorShape.setOutlineColor(sf::Color::Black);
 
 	updateIndicatorPosition();
-}
-
-void gui::Slider::updateIndicatorPosition()
-{
-	float range = std::max(1, maxValue - minValue);
-	float perc = float(value - minValue) / float(range);
-	perc = std::clamp(perc, 0.f, 1.f);
-
-	sf::Vector2f shapeSize = backgroundShape.getSize();
-
-	foregroundShape.setSize({shapeSize.x * perc, shapeSize.y});
-
-	// 1. Posição X: Posição do Slider (0 local) + Perc * Width
-	float indicatorX = shapeSize.x * perc;
-
-	// 2. Posição Y: Centro do Slider local
-	float indicatorY = shapeSize.y / 2.f;
-
-	float radius = indicatorShape.getRadius();
-	indicatorShape.setOrigin({radius, radius});
-
-	indicatorShape.setPosition({indicatorX, indicatorY});
-}
-
-void gui::Slider::handleDrag(const sf::Vector2f &mousePos)
-{
-	float trackLeft = getPosition().x;
-	float trackWidth = backgroundShape.getSize().x;
-
-	float newX = mousePos.x - dragOffsetX;
-	newX = std::clamp(newX, trackLeft, trackLeft + trackWidth);
-
-	float perc = (newX - trackLeft) / trackWidth;
-	int range = std::max(1, maxValue - minValue);
-	int newVal = minValue + static_cast<int>(perc * range);
-
-	if (newVal != value)
-	{
-		value = newVal;
-		updateIndicatorPosition();
-		if (onValueChangeCallback)
-			onValueChangeCallback();
-	}
-}
-
-void gui::Slider::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-	states.transform *= this->getTransform();
-
-	target.draw(backgroundShape, states);
-	target.draw(foregroundShape, states);
-	target.draw(indicatorShape, states);
 }
 
 void gui::Slider::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
@@ -127,4 +76,56 @@ void gui::Slider::setSize(const sf::Vector2f &newSize)
 	backgroundShape.setSize(newSize);
 
 	updateIndicatorPosition();
+}
+
+void gui::Slider::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	states.transform *= this->getTransform();
+
+	target.draw(backgroundShape, states);
+	target.draw(foregroundShape, states);
+	target.draw(indicatorShape, states);
+}
+
+void gui::Slider::updateIndicatorPosition()
+{
+	float range = std::max(1, maxValue - minValue);
+	float perc = float(value - minValue) / float(range);
+	perc = std::clamp(perc, 0.f, 1.f);
+
+	sf::Vector2f shapeSize = backgroundShape.getSize();
+
+	foregroundShape.setSize({shapeSize.x * perc, shapeSize.y});
+
+	// 1. Posição X: Posição do Slider (0 local) + Perc * Width
+	float indicatorX = shapeSize.x * perc;
+
+	// 2. Posição Y: Centro do Slider local
+	float indicatorY = shapeSize.y / 2.f;
+
+	float radius = indicatorShape.getRadius();
+	indicatorShape.setOrigin({radius, radius});
+
+	indicatorShape.setPosition({indicatorX, indicatorY});
+}
+
+void gui::Slider::handleDrag(const sf::Vector2f &mousePos)
+{
+	float trackLeft = getPosition().x;
+	float trackWidth = backgroundShape.getSize().x;
+
+	float newX = mousePos.x - dragOffsetX;
+	newX = std::clamp(newX, trackLeft, trackLeft + trackWidth);
+
+	float perc = (newX - trackLeft) / trackWidth;
+	int range = std::max(1, maxValue - minValue);
+	int newVal = minValue + static_cast<int>(perc * range);
+
+	if (newVal != value)
+	{
+		value = newVal;
+		updateIndicatorPosition();
+		if (onValueChangeCallback)
+			onValueChangeCallback();
+	}
 }

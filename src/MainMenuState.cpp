@@ -1,59 +1,6 @@
 #include "stdafx.hpp"
 #include "MainMenuState.hpp"
 
-void MainMenuState::initKeybinds()
-{
-
-	std::ifstream ifs("src/Config/mainmenustate_keybinds.ini");
-
-	if (ifs.is_open())
-	{
-		std::string key = "";
-		std::string key2 = "";
-
-		while (ifs >> key >> key2)
-			keybinds[key] = data.supportedKeys->at(key2);
-	}
-
-	ifs.close();
-}
-
-void MainMenuState::initGui()
-{
-	// Buttons
-	buttons["GAME_STATE"] = std::make_unique<gui::Button>(
-		sf::Vector2f(100.f, 100.f),
-		sf::Vector2f(250.f, 50.f),
-		&font, "New Game", 32);
-
-	buttons["SETTINGS_STATE"] = std::make_unique<gui::Button>(
-		sf::Vector2f(100.f, 200.f),
-		sf::Vector2f(250.f, 50.f),
-		&font, "Settings", 32);
-
-	buttons["DIALOG_BOX_STATE"] = std::make_unique<gui::Button>(
-		sf::Vector2f(100.f, 300.f),
-		sf::Vector2f(250.f, 50.f),
-		&font, "Dialog Box", 32);
-
-	buttons["EXIT_STATE"] = std::make_unique<gui::Button>(
-		sf::Vector2f(100.f, 300.f),
-		sf::Vector2f(250.f, 50.f),
-		&font, "Quit", 32);
-
-	// Settings
-	buttons["SETTINGS_STATE"]->onPressed([this]
-										 { data.states->push(std::make_unique<SettingsState>(data)); });
-
-	// Dialog Box
-	buttons["DIALOG_BOX_STATE"]->onPressed([this]
-										   { data.states->push(std::make_unique<DialogBoxState>(data)); });
-
-	// Quit the game
-	buttons["EXIT_STATE"]->onPressed([this]
-									 { endState(); });
-}
-
 MainMenuState::MainMenuState(StateData &state_data)
 	: State(state_data)
 {
@@ -123,4 +70,57 @@ void MainMenuState::render(sf::RenderTarget &target)
 	target.draw(background);
 
 	renderGui(target);
+}
+
+void MainMenuState::initKeybinds()
+{
+
+	std::ifstream ifs("src/Config/mainmenustate_keybinds.ini");
+
+	if (ifs.is_open())
+	{
+		std::string key = "";
+		std::string key2 = "";
+
+		while (ifs >> key >> key2)
+			keybinds[key] = data.supportedKeys->at(key2);
+	}
+
+	ifs.close();
+}
+
+void MainMenuState::initGui()
+{
+	// Buttons
+	buttons["GAME_STATE"] = std::make_unique<gui::Button>(
+		sf::Vector2f(100.f, 100.f),
+		sf::Vector2f(250.f, 50.f),
+		&font, "New Game", 32);
+
+	buttons["SETTINGS_STATE"] = std::make_unique<gui::Button>(
+		sf::Vector2f(100.f, 200.f),
+		sf::Vector2f(250.f, 50.f),
+		&font, "Settings", 32);
+
+	buttons["DIALOG_BOX_STATE"] = std::make_unique<gui::Button>(
+		sf::Vector2f(100.f, 300.f),
+		sf::Vector2f(250.f, 50.f),
+		&font, "Dialog Box", 32);
+
+	buttons["EXIT_STATE"] = std::make_unique<gui::Button>(
+		sf::Vector2f(100.f, 300.f),
+		sf::Vector2f(250.f, 50.f),
+		&font, "Quit", 32);
+
+	// Settings
+	buttons["SETTINGS_STATE"]->onPressed([this]
+										 { data.states->push(std::make_unique<SettingsState>(data)); });
+
+	// Dialog Box
+	buttons["DIALOG_BOX_STATE"]->onPressed([this]
+										   { data.states->push(std::make_unique<DialogBoxState>(data)); });
+
+	// Quit the game
+	buttons["EXIT_STATE"]->onPressed([this]
+									 { endState(); });
 }
