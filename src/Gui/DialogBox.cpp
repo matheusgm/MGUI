@@ -12,7 +12,6 @@ gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
 	shape.setFillColor(sf::Color::Red);
 	shape.setOutlineThickness(1.f);
 	shape.setOutlineColor(sf::Color::Black);
-	shape.setPosition(position);
 
 	// Text
 	text.setFillColor(sf::Color::Black);
@@ -20,7 +19,7 @@ gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
 
 	// Close Button
 	closeButton = Button(
-		{position.x + 10.f, (position.y + size.y) - 35.f},
+		{10.f, size.y - 35.f},
 		{100.f, 25.f}, "Close", 16U);
 }
 
@@ -46,18 +45,22 @@ gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
 
 void gui::DialogBox::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
-	closeButton.updateEvents(sfEvent, mousePos);
+	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
+
+	closeButton.updateEvents(sfEvent, scrollLocalMousePos);
 
 	for (auto &btn : buttons)
-		btn.updateEvents(sfEvent, mousePos);
+		btn.updateEvents(sfEvent, scrollLocalMousePos);
 }
 
 void gui::DialogBox::update(const sf::Vector2f &mousePos)
 {
-	closeButton.update(mousePos);
+	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
+
+	closeButton.update(scrollLocalMousePos);
 
 	for (auto &btn : buttons)
-		btn.update(mousePos);
+		btn.update(scrollLocalMousePos);
 }
 
 sf::FloatRect gui::DialogBox::getLocalBounds() const
@@ -67,6 +70,7 @@ sf::FloatRect gui::DialogBox::getLocalBounds() const
 
 void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
 {
+
 	dialogType = node->type;
 	updateText(node->message);
 
@@ -78,18 +82,29 @@ void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
 	constexpr float btnSpacing = 10.f;
 	constexpr float margin = 10.f;
 
-	const float totalWidth = node->options.size() * (btnWidth + btnSpacing) - btnSpacing;
-
-	float x = shape.getPosition().x + shape.getSize().x - totalWidth - margin;
+	float x = shape.getPosition().x + shape.getSize().x - margin;
 	float y = shape.getPosition().y + shape.getSize().y - btnHeight - margin;
 
-	for (const auto &[label, _] : node->options)
+	if (node->type == DialogType::OK)
 	{
-		gui::Button btn({x, y}, {btnWidth, btnHeight}, label);
-		btn.onPressed([this, label]()
-					  { if (choiceCallback) choiceCallback(label); });
+		x -= btnWidth;
+		gui::Button btn({x, y}, {btnWidth, btnHeight}, "Ok");
+		btn.onPressed([this]()
+					  { if (choiceCallback) choiceCallback("Ok"); });
 		buttons.emplace_back(std::move(btn));
-		x += btnWidth + btnSpacing;
+	}
+	else
+	{
+		const float totalWidth = node->options.size() * (btnWidth + btnSpacing) - btnSpacing;
+		x -= totalWidth;
+		for (const auto &[label, _] : node->options)
+		{
+			gui::Button btn({x, y}, {btnWidth, btnHeight}, label);
+			btn.onPressed([this, label]()
+						  { if (choiceCallback) choiceCallback(label); });
+			buttons.emplace_back(std::move(btn));
+			x += btnWidth + btnSpacing;
+		}
 	}
 }
 
@@ -118,7 +133,7 @@ sf::Font &gui::DialogBox::loadFont()
 		defaultFont = std::make_unique<sf::Font>();
 		if (!defaultFont->openFromFile("src/Fonts/MochiyPopPOne-Regular.ttf"))
 			throw std::runtime_error("Failed to load default font!");
-	} 
+	}
 
 	return *defaultFont;
 }

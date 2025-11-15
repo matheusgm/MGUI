@@ -8,5 +8,6 @@ void gui::DialogTree::choose(const std::string &label)
     if (currentNode->options.count(label))
     {
         currentNode = currentNode->options[label];
+        nodeChanged = true;
     }
 }

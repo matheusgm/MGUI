@@ -58,6 +58,13 @@ void DialogBoxState::update(float dt)
 	updateMousePositions();
 
 	updateGui(dt);
+
+	if (dialogTree->nodeHasChanged())
+	{
+		cout << "Mudou" << endl;
+		dialogTree->resetNodeChangedFlag();
+		dialogBox->loadNode(dialogTree->current());
+	}
 }
 
 void DialogBoxState::renderGui(sf::RenderTarget &target) const
@@ -128,13 +135,10 @@ void DialogBoxState::initGui()
 
 	dialogTree = std::make_unique<gui::DialogTree>(root);
 	dialogBox = std::make_unique<gui::DialogBox>(sf::Vector2f(150.f, 200.f), sf::Vector2f(600.f, 250.f));
-	dialogBox->setPosition({150, 200});
 	dialogBox->loadNode(dialogTree->current());
 
 	dialogBox->setChoiceCallback([&](const std::string &choice)
-								 {
-		dialogTree->choose(choice);
-		dialogBox->loadNode(dialogTree->current()); });
+								 { dialogTree->choose(choice); });
 
 	// std::vector<std::string> dialogTexts = { "Texto 1", "Texto 2", "Texto 3" };
 	// size_t currentDialogIndex = 0;
