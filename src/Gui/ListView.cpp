@@ -12,7 +12,7 @@ gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, 
 	for (size_t i = 0; i < MAX_VIEWS_IN_BUFFER; ++i)
 		m_viewBuffer.push_back(m_adapter->createView());
 
-	float scrollWidth = 20.0f;
+	float scrollWidth = 10.0f;
 
 	m_scrollBar = std::make_unique<gui::Scroll>(sf::Vector2f(size.x - scrollWidth, 0.0f), sf::Vector2f(scrollWidth, size.y));
 

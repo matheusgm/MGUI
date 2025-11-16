@@ -5,7 +5,7 @@ gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
 	: GuiElement(position)
 {
 	// Button Up
-	buttonUp = std::make_unique<Button>(sf::Vector2f(0.f, 0.f), sf::Vector2f(size.x, size.x), "^", 20);
+	buttonUp = std::make_unique<Button>(sf::Vector2f(0.f, 0.f), sf::Vector2f(size.x, size.x), "^", size.x * 1.f);
 	buttonUp->onPressed(
 		[this]
 		{
@@ -23,7 +23,7 @@ gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
 	shape.setOutlineColor(sf::Color::Black);
 
 	// Button Down
-	buttonDown = std::make_unique<Button>(sf::Vector2f(0.f, size.y - size.x), sf::Vector2f(size.x, size.x), "^", 20);
+	buttonDown = std::make_unique<Button>(sf::Vector2f(0.f, size.y - size.x), sf::Vector2f(size.x, size.x), "^", size.x * 1.f);
 	buttonDown->setOrigin({size.x / 2, size.x / 2});
 	buttonDown->setRotation(sf::degrees(180.f));
 	buttonDown->setPosition(buttonDown->getPosition() + sf::Vector2f({size.x / 2, size.x / 2}));
