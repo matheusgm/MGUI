@@ -4,7 +4,10 @@
 gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, std::unique_ptr<const IListViewAdapter> adapter)
 	: GuiElement(position), m_adapter(std::move(adapter)), m_viewport(position, size)
 {
-	m_background.setSize(size);
+	float scrollWidth = 10.0f;
+	float backgroundSizeX = size.x - scrollWidth;
+
+	m_background.setSize({backgroundSizeX, size.y});
 	m_background.setFillColor(sf::Color::Yellow);
 	m_background.setOutlineThickness(1.f);
 	m_background.setOutlineColor(sf::Color::Black);
@@ -12,9 +15,7 @@ gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, 
 	for (size_t i = 0; i < MAX_VIEWS_IN_BUFFER; ++i)
 		m_viewBuffer.push_back(m_adapter->createView());
 
-	float scrollWidth = 10.0f;
-
-	m_scrollBar = std::make_unique<gui::Scroll>(sf::Vector2f(size.x - scrollWidth, 0.0f), sf::Vector2f(scrollWidth, size.y));
+	m_scrollBar = std::make_unique<gui::Scroll>(sf::Vector2f(backgroundSizeX, 0.0f), sf::Vector2f(scrollWidth, size.y));
 
 	m_scrollBar->onValueChange([this]()
 							   { this->calculateScrollLayout(); });

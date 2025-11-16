@@ -16,14 +16,17 @@ gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
 				onValueChangeCallback();
 		});
 
+	float trackAreaY = size.y - 2 * size.x;
+
 	// Area
-	shape.setSize(size);
+	shape.setSize({size.x, trackAreaY});
+	shape.setPosition(shape.getPosition() + sf::Vector2f({0.f, size.x}));
 	shape.setFillColor(sf::Color::Blue);
 	shape.setOutlineThickness(1.f);
 	shape.setOutlineColor(sf::Color::Black);
 
 	// Button Down
-	buttonDown = std::make_unique<Button>(sf::Vector2f(0.f, size.y - size.x), sf::Vector2f(size.x, size.x), "^", size.x * 1.f);
+	buttonDown = std::make_unique<Button>(sf::Vector2f(0.f, size.x + trackAreaY), sf::Vector2f(size.x, size.x), "^", size.x * 1.f);
 	buttonDown->setOrigin({size.x / 2, size.x / 2});
 	buttonDown->setRotation(sf::degrees(180.f));
 	buttonDown->setPosition(buttonDown->getPosition() + sf::Vector2f({size.x / 2, size.x / 2}));
@@ -228,16 +231,3 @@ void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 			onValueChangeCallback();
 	}
 }
-
-float gui::Scroll::getButtonUpHeight() const
-{
-	sf::Vector2f btnUpSize = buttonUp->getGlobalBounds().size;
-	return btnUpSize.y;
-};
-
-float gui::Scroll::getTrackHeight() const
-{
-	float areaHeight = shape.getSize().y;
-	float btnUpY = getButtonUpHeight();
-	return areaHeight - (2 * btnUpY);
-};

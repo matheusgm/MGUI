@@ -48,7 +48,7 @@ namespace gui
         void clampValue();
         void updateIndicatorPosition();
         void handleDrag(const sf::Vector2f &mousePos);
-        float getButtonUpHeight() const;
-        float getTrackHeight() const;
+        float getButtonUpHeight() const { return buttonUp->getSize().y; };
+        float getTrackHeight() const { return shape.getSize().y; };
     };
 }

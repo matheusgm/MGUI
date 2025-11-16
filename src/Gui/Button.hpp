@@ -36,6 +36,7 @@ namespace gui
 
 		bool isPressed() const { return buttonState == ButtonState::PRESSED; }
 		std::string getText() const { return text.getString(); }
+		sf::Vector2f getSize() const { return shape.getSize(); }
 		short unsigned getId() const { return id; };
 
 		void setText(const std::string &textStr);
