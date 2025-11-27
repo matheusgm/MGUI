@@ -6,6 +6,7 @@
 #include "Gui/ListView.hpp"
 #include "Gui/Select.hpp"
 #include "Gui/Scroll.hpp"
+#include "Gui/TextBox.hpp"
 
 class SettingsState : public State
 {
@@ -16,8 +17,8 @@ public:
     void updateKeyboardInput(sf::Event &event) override;
     void updateEvents(sf::Event &event) override;
     void onResizeWindow() override;
-    void updateGui(float dt) const;
-    void update(float dt) override;
+    void updateGui(sf::Time deltaTime) const;
+    void update(sf::Time deltaTime) override;
     void renderGui(sf::RenderTarget &target) const;
     void render(sf::RenderTarget &target) override;
 
@@ -32,6 +33,8 @@ private:
     std::unique_ptr<gui::ListView> listView;
     std::unique_ptr<gui::Select> select;
     std::unique_ptr<gui::Scroll> scroll;
+    std::unique_ptr<gui::TextBox> textBox;
+    std::unique_ptr<gui::TextBox> textBox2;
 
     sf::Text debugLinePositionText;
 

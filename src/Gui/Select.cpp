@@ -15,7 +15,7 @@ void gui::Select::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
 }
 
-void gui::Select::update(const sf::Vector2f &mousePos)
+void gui::Select::update(sf::Time deltaTime)
 {
 }
 

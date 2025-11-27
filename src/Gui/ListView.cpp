@@ -47,14 +47,11 @@ void gui::ListView::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePo
 	}
 }
 
-void gui::ListView::update(const sf::Vector2f &mousePos)
+void gui::ListView::update(sf::Time deltaTime)
 {
-	sf::Vector2f listViewLocalMousePos = mapGlobalToLocal(mousePos);
 
 	if (m_scrollBar)
-	{
-		m_scrollBar->update(listViewLocalMousePos);
-	}
+		m_scrollBar->update(deltaTime);
 }
 
 sf::FloatRect gui::ListView::getLocalBounds() const

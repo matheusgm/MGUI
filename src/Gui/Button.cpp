@@ -51,6 +51,7 @@ void gui::Button::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 		{
 			buttonState = ButtonState::PRESSED;
 			buttonPressed = true;
+			return;
 		}
 	}
 
@@ -59,31 +60,36 @@ void gui::Button::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 	{
 		if (mouseReleased->button == sf::Mouse::Button::Left && buttonPressed)
 		{
-			if (hovered)
-				onPressedCallback();
-
-			buttonReleased = true;
 			buttonPressed = false;
-			buttonState = hovered ? ButtonState::HOVER : ButtonState::NORMAL;
+
+			if (hovered)
+			{
+				onPressedCallback();
+				buttonState = ButtonState::HOVER;
+			}else{
+				buttonState = ButtonState::NORMAL;
+			}
+			return;
 		}
 	}
 
-	// Update hover state if not pressed
 	if (!buttonPressed)
-		buttonState = hovered ? ButtonState::HOVER : ButtonState::NORMAL;
+    {
+        if (hovered)
+        {
+             if (buttonState != ButtonState::HOVER)
+                buttonState = ButtonState::HOVER;
+        }
+        else
+        {
+            if (buttonState != ButtonState::NORMAL)
+                buttonState = ButtonState::NORMAL;
+        }
+    }
 }
 
-void gui::Button::update(const sf::Vector2f &mousePos)
+void gui::Button::update(sf::Time deltaTime)
 {
-	if (buttonReleased)
-	{
-		buttonReleased = false;
-		buttonState = ButtonState::NORMAL;
-		bool hovered = isHovered(mousePos);
-		if (hovered)
-			buttonState = ButtonState::HOVER;
-	}
-
 	switch (buttonState)
 	{
 	case ButtonState::NORMAL:

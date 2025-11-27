@@ -16,7 +16,7 @@ void ExampleListViewItem::updateEvents(sf::Event &sfEvent, const sf::Vector2f &m
 {
 }
 
-void ExampleListViewItem::update(const sf::Vector2f &mousePos)
+void ExampleListViewItem::update(sf::Time deltaTime)
 {
 }
 

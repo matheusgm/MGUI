@@ -43,21 +43,21 @@ void DialogBoxState::onResizeWindow()
 	buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
 }
 
-void DialogBoxState::updateGui(float dt) const
+void DialogBoxState::updateGui(sf::Time deltaTime) const
 {
 	/* Updates all the gui in the state and handles their functionality */
 	// Buttons
 	for (auto &it : buttons)
-		it.second->update(mousePosView);
+		it.second->update(deltaTime);
 
-	dialogBox->update(mousePosView);
+	dialogBox->update(deltaTime);
 }
 
-void DialogBoxState::update(float dt)
+void DialogBoxState::update(sf::Time deltaTime)
 {
 	updateMousePositions();
 
-	updateGui(dt);
+	updateGui(deltaTime);
 
 	if (dialogTree->nodeHasChanged())
 	{

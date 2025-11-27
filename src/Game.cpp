@@ -13,7 +13,7 @@ Game::Game()
 
 void Game::updateDt()
 {
-	dt = dtClock.restart().asSeconds();
+	dt = dtClock.restart();
 }
 
 void Game::updateSFMLEvents()
@@ -94,7 +94,6 @@ void Game::endApplication()
 void Game::initVariables()
 {
 	window = NULL;
-	dt = 0.f;
 	gridSize = 50.f;
 }
 

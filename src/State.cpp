@@ -13,10 +13,10 @@ void State::updateMousePositions()
 	mousePosView = data.window->mapPixelToCoords(sf::Mouse::getPosition(*data.window));
 }
 
-void State::updateKeytime(float dt)
+void State::updateKeytime(sf::Time deltaTime)
 {
 	if (keytime < keytimeMax)
-		keytime += 100.f * dt;
+		keytime += 100.f * deltaTime.asSeconds();
 }
 
 bool State::getKeytime()

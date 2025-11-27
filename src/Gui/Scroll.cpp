@@ -90,12 +90,10 @@ void gui::Scroll::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 	}
 }
 
-void gui::Scroll::update(const sf::Vector2f &mousePos)
+void gui::Scroll::update(sf::Time deltaTime)
 {
-	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
-
-	buttonUp->update(scrollLocalMousePos);
-	buttonDown->update(scrollLocalMousePos);
+	buttonUp->update(deltaTime);
+	buttonDown->update(deltaTime);
 }
 
 sf::FloatRect gui::Scroll::getLocalBounds() const

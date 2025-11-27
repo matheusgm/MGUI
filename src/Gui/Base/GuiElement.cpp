@@ -1,7 +1,9 @@
 #include "../../stdafx.hpp"
 #include "GuiElement.hpp"
 
-gui::GuiElement::GuiElement(sf::Vector2f position)
+std::atomic<unsigned int> gui::GuiElement::s_nextId = 1;
+
+gui::GuiElement::GuiElement(sf::Vector2f position) : m_id(s_nextId.fetch_add(1))
 {
 	setPosition(position);
 }

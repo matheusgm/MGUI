@@ -29,7 +29,7 @@ private:
 
     std::map<std::string, int> supportedKeys;
 
-    float dt = 0.f;
+    sf::Time dt;
     float gridSize = 100.f;
 
     void initVariables();

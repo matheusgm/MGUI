@@ -7,7 +7,7 @@ public:
     ExampleListViewItem(const sf::Font &font, float height);
 
     void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos);
-    void update(const sf::Vector2f &mousePos);
+    void update(sf::Time deltaTime);
     virtual sf::FloatRect getLocalBounds() const override;
 
     void updateWithData(const Example &data, size_t index);

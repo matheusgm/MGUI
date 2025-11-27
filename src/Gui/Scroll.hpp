@@ -11,7 +11,7 @@ namespace gui
         virtual ~Scroll() = default;
 
         void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
-        void update(const sf::Vector2f &mousePos) override;
+        void update(sf::Time deltaTime) override;
         virtual sf::FloatRect getLocalBounds() const override;
 
         void scrollWheel(int delta);

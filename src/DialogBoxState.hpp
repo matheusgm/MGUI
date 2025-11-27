@@ -14,8 +14,8 @@ public:
     void updateKeyboardInput(sf::Event &event) override;
     void updateEvents(sf::Event &event) override;
     void onResizeWindow() override;
-    void updateGui(float dt) const;
-    void update(float dt) override;
+    void updateGui(sf::Time deltaTime) const;
+    void update(sf::Time deltaTime) override;
     void renderGui(sf::RenderTarget &target) const;
     void render(sf::RenderTarget &target) override;
 

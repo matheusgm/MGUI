@@ -46,17 +46,17 @@ void MainMenuState::onResizeWindow()
 	buttons["EXIT_STATE"]->setPosition({firstBtn.getLeft(), window_size.y - 50.f - gap});
 }
 
-void MainMenuState::updateGui() const
+void MainMenuState::updateGui(sf::Time deltaTime) const
 {
 	for (auto &it : buttons)
-		it.second->update(mousePosView);
+		it.second->update(deltaTime);
 }
 
-void MainMenuState::update(float dt)
+void MainMenuState::update(sf::Time deltaTime)
 {
 	updateMousePositions();
 
-	updateGui();
+	updateGui(deltaTime);
 }
 
 void MainMenuState::renderGui(sf::RenderTarget &target) const

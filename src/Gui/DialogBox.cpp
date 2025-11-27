@@ -18,9 +18,9 @@ gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
 	text.setCharacterSize(24U);
 
 	// Close Button
-	closeButton = Button(
-		{10.f, size.y - 35.f},
-		{100.f, 25.f}, "Close", 16U);
+	closeButton = std::make_unique<gui::Button>(
+		sf::Vector2f(10.f, size.y - 35.f),
+		sf::Vector2f(100.f, 25.f), "Close", 16U);
 }
 
 // gui::DialogBox* gui::DialogBox::CreateOkDialog(float x, float y, float w, float h) {
@@ -47,20 +47,18 @@ void gui::DialogBox::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mouseP
 {
 	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
 
-	closeButton.updateEvents(sfEvent, scrollLocalMousePos);
+	closeButton->updateEvents(sfEvent, scrollLocalMousePos);
 
 	for (auto &btn : buttons)
 		btn.updateEvents(sfEvent, scrollLocalMousePos);
 }
 
-void gui::DialogBox::update(const sf::Vector2f &mousePos)
+void gui::DialogBox::update(sf::Time deltaTime)
 {
-	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
-
-	closeButton.update(scrollLocalMousePos);
+	closeButton->update(deltaTime);
 
 	for (auto &btn : buttons)
-		btn.update(scrollLocalMousePos);
+		btn.update(deltaTime);
 }
 
 sf::FloatRect gui::DialogBox::getLocalBounds() const
@@ -115,7 +113,7 @@ void gui::DialogBox::draw(sf::RenderTarget &target, sf::RenderStates states) con
 	target.draw(shape, states);
 	target.draw(text, states);
 
-	target.draw(closeButton, states);
+	target.draw(*closeButton, states);
 
 	for (auto &btn : buttons)
 		target.draw(btn, states);

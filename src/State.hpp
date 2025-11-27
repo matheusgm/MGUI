@@ -10,11 +10,11 @@ public:
 	virtual ~State() = default;
 
 	virtual void updateMousePositions();
-	virtual void updateKeytime(float dt);
+	virtual void updateKeytime(sf::Time deltaTime);
 	virtual void updateKeyboardInput(sf::Event &event) = 0;
 	virtual void updateEvents(sf::Event &event) = 0;
 	virtual void onResizeWindow() = 0;
-	virtual void update(float dt) = 0;
+	virtual void update(sf::Time deltaTime) = 0;
 	virtual void render(sf::RenderTarget &target) = 0;
 
 	bool getQuit() const { return quit; };

@@ -12,7 +12,7 @@ namespace gui
         virtual ~DialogBox() = default;
 
         void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
-        void update(const sf::Vector2f &mousePos) override;
+        void update(sf::Time deltaTime) override;
 
         virtual sf::FloatRect getLocalBounds() const override;
 
@@ -29,7 +29,7 @@ namespace gui
         static std::unique_ptr<sf::Font> defaultFont;
 
         std::vector<gui::Button> buttons;
-        Button closeButton;
+        std::unique_ptr<Button> closeButton;
 
         DialogType dialogType = DialogType::OK;
 
