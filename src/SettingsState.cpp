@@ -3,7 +3,6 @@
 #include "Model/Example.hpp"
 #include "Gui/ListViewAdapter.tpp"
 #include "ExampleListViewItem.hpp"
-#include "Gui/FocusElementManager.hpp"
 #include "Gui/Slider.hpp"
 #include "Gui/Button.hpp"
 #include "Gui/ListView.hpp"

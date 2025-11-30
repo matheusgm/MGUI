@@ -7,6 +7,6 @@ namespace gui
     {
     public:
         virtual ~IKeyboardInput() = default;
-        virtual void handleKeyboardInput(const sf::Event &sfEvent) = 0;
+        virtual bool handleKeyboardInput(const sf::Event &sfEvent) = 0;
     };
 }

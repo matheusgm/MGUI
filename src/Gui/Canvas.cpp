@@ -43,7 +43,9 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
             m_ignoreNextTextEntered = false;
             return;
         }
-        m_focusManager.handleKeyboardInput(sfEvent);
+        if (m_focusManager.handleKeyboardInput(sfEvent))
+            gui::FocusElementManager::getInstance().clearFocus();
+            
         return;
     }
 

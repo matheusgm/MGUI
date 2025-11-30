@@ -40,7 +40,7 @@ void gui::FocusElementManager::clearFocus()
     }
 }
 
-void gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
+bool gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
 {
     if (m_focusedElement != nullptr)
     {
@@ -48,11 +48,13 @@ void gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
         if (IKeyboardInput *keyboardInput = dynamic_cast<IKeyboardInput *>(m_focusedElement))
         {
             // Delega o evento de teclado para o elemento focado
-            keyboardInput->handleKeyboardInput(sfEvent);
+            return keyboardInput->handleKeyboardInput(sfEvent);
         }
         // Se o elemento estiver focado, mas não for IKeyboardInput (ex: um botão),
         // o evento é silenciosamente ignorado, o que é o comportamento desejado.
     }
+
+    return false;
 }
 
 gui::FocusElementManager &gui::FocusElementManager::getInstance()

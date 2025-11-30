@@ -22,7 +22,7 @@ namespace gui
         virtual bool isBeingPressed() const override { return m_isPressed; }
         virtual void setPressedState(bool pressed, const sf::Vector2f &mousePos) override;
 
-        virtual void handleKeyboardInput(const sf::Event &sfEvent) override;
+        virtual bool handleKeyboardInput(const sf::Event &sfEvent) override;
 
         std::string getText() const { return m_inputString; };
 

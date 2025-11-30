@@ -1,6 +1,5 @@
 #include "../stdafx.hpp"
 #include "TextBox.hpp"
-#include "FocusElementManager.hpp"
 
 std::unique_ptr<sf::Font> gui::TextBox::defaultFont;
 
@@ -103,7 +102,7 @@ void gui::TextBox::setPressedState(bool pressed, const sf::Vector2f &mousePos)
     }
 }
 
-void gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
+bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
 {
     if (auto textEntered = sfEvent.getIf<sf::Event::TextEntered>())
         handleTextEnteredEvent(*textEntered);
@@ -115,8 +114,7 @@ void gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
             if (onTextCanceled)
                 onTextCanceled();
 
-            gui::FocusElementManager::getInstance().clearFocus();
-            return;
+            return true;
         }
 
         if (keyPressed->code == activationKey)
@@ -124,11 +122,12 @@ void gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
             if (onTextSubmitted)
                 onTextSubmitted(m_inputString);
 
-            gui::FocusElementManager::getInstance().clearFocus();
-            return;
+            return true;
         }
         // ... Lógica para setas (Left/Right), Home, End, etc.
     }
+
+    return false;
 }
 
 void gui::TextBox::draw(sf::RenderTarget &target, sf::RenderStates states) const
