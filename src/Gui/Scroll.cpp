@@ -2,7 +2,7 @@
 #include "Scroll.hpp"
 
 gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
-	: GuiElement(position)
+	: Container(position)
 {
 	// Button Up
 	buttonUp = std::make_unique<Button>(sf::Vector2f(0.f, 0.f), sf::Vector2f(size.x, size.x), "^", size.x * 1.f);
@@ -82,59 +82,33 @@ sf::FloatRect gui::Scroll::getLocalBounds() const
 
 void gui::Scroll::setPressedState(bool pressed, const sf::Vector2f &mousePos)
 {
-	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
+	sf::Vector2f localMousePos = mapGlobalToLocal(mousePos);
 
-	GuiElement *childUnderMouse = findChildAt(scrollLocalMousePos);
+	// cout << "Entrou" << endl;
+	if (handleChildPress(pressed, localMousePos))
+		return;
 
 	if (pressed)
 	{
-		if (childUnderMouse)
-		{
-			if (IPressable *pressableChild = dynamic_cast<IPressable *>(childUnderMouse))
-			{
-				pressableChild->setPressedState(true, scrollLocalMousePos);
-				m_pressedChild = childUnderMouse;
-				return;
-			}
-		}
-
 		sf::FloatRect indicatorLocalBounds = indicatorShape.getTransform().transformRect(indicatorShape.getLocalBounds());
 
-		if (indicatorLocalBounds.contains(scrollLocalMousePos))
+		if (indicatorLocalBounds.contains(localMousePos))
 		{
 			m_isPressed = true;
 			m_thumbPressed = true;
-			dragOffsetY = scrollLocalMousePos.y - indicatorShape.getPosition().y;
+			dragOffsetY = localMousePos.y - indicatorShape.getPosition().y;
 			return;
 		}
 
 		// --- 3. Calha (Track) ---
 		// Se não foi Thumb nem Button, o Scroll (Track) pode ser considerado pressionado.
 		m_isPressed = true;
-		// ... (Lógica para rolar uma página, se aplicável)
 	}
 	else
 	{
-		if (m_pressedChild)
-		{
-			if (childUnderMouse == m_pressedChild)
-			{
-				if (IClickable *clickableChild = dynamic_cast<IClickable *>(m_pressedChild))
-					clickableChild->executeClickAction();
-			}
-
-			if (IPressable *pressableChild = dynamic_cast<IPressable *>(m_pressedChild))
-				pressableChild->setPressedState(false, scrollLocalMousePos);
-		}
-
-		// Reseta todos os estados
 		m_isPressed = false;
 		m_thumbPressed = false;
 		dragOffsetY = 0.0f;
-		m_pressedChild = nullptr;
-
-		buttonUp->setPressedState(false, scrollLocalMousePos);
-		buttonDown->setPressedState(false, scrollLocalMousePos);
 	}
 }
 

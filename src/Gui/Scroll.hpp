@@ -1,11 +1,12 @@
 #pragma once
 #include "Base/GuiElement.hpp"
+#include "Container.hpp"
 #include "Interfaces/IScrollable.hpp"
 #include "Button.hpp"
 
 namespace gui
 {
-    class Scroll : public GuiElement, public IPressable, public IScrollable
+    class Scroll : public Container, public IScrollable
     {
     public:
         Scroll(sf::Vector2f position, sf::Vector2f size);
@@ -17,7 +18,6 @@ namespace gui
 
         // Implementações de IPressable
         virtual void setPressedState(bool pressed, const sf::Vector2f &mousePos) override;
-        virtual bool isBeingPressed() const override { return m_isPressed; }
 
         virtual void scrollWheel(int delta);
 
@@ -32,6 +32,7 @@ namespace gui
 
     protected:
         virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
+        gui::GuiElement *findChildAt(const sf::Vector2f &mousePos) override;
 
     private:
         sf::RectangleShape shape;
@@ -42,9 +43,6 @@ namespace gui
 
         std::function<void()> onValueChangeCallback = []() {};
 
-        GuiElement *m_pressedChild = nullptr;
-
-        bool m_isPressed = false;
         bool m_thumbPressed = false;
 
         int minValue = 0;
@@ -59,6 +57,5 @@ namespace gui
         void handleDrag(const sf::Vector2f &mousePos);
         float getButtonUpHeight() const { return buttonUp->getSize().y; };
         float getTrackHeight() const { return shape.getSize().y; };
-        GuiElement *findChildAt(const sf::Vector2f &mousePos);
     };
 }

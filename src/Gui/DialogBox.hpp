@@ -1,12 +1,13 @@
 #pragma once
 #include "Base/GuiElement.hpp"
+#include "Container.hpp"
 #include "Button.hpp"
 #include "Model/DialogNode.hpp"
 #include "Interfaces/IPressable.hpp"
 
 namespace gui
 {
-    class DialogBox : public GuiElement, public IPressable, public IFocusable
+    class DialogBox : public Container, public IFocusable
     {
     public:
         DialogBox(sf::Vector2f position, sf::Vector2f size);
@@ -17,8 +18,7 @@ namespace gui
 
         virtual sf::FloatRect getLocalBounds() const override;
 
-        virtual bool isBeingPressed() const override { return m_isPressed; }
-        virtual void setPressedState(bool pressed, const sf::Vector2f &mousePos);
+        virtual void setPressedState(bool pressed, const sf::Vector2f &mousePos) override;
 
         virtual void onFocusChanged(bool focused);
 
@@ -27,6 +27,7 @@ namespace gui
 
     protected:
         virtual void draw(sf::RenderTarget &target, sf::RenderStates states) const override;
+        gui::GuiElement *findChildAt(const sf::Vector2f &mousePos) override;
 
     private:
         sf::RectangleShape shape;
@@ -37,9 +38,6 @@ namespace gui
         std::vector<gui::Button> buttons;
         std::unique_ptr<Button> closeButton;
 
-        GuiElement *m_pressedChild = nullptr;
-        bool m_isPressed = false;
-
         DialogType dialogType = DialogType::OK;
 
         std::function<void(DialogBox *self, const std::string &)> choiceCallback = [](DialogBox *self, const std::string &) {};
@@ -47,6 +45,5 @@ namespace gui
         // Helpers
         void updateText(const std::string &textStr);
         static sf::Font &loadFont();
-        GuiElement *findChildAt(const sf::Vector2f &mousePos);
     };
 }

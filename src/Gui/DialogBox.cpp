@@ -4,7 +4,7 @@
 std::unique_ptr<sf::Font> gui::DialogBox::defaultFont;
 
 gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
-	: GuiElement(position),
+	: Container(position),
 	  text(loadFont())
 {
 	// Shape
@@ -70,42 +70,10 @@ void gui::DialogBox::setPressedState(bool pressed, const sf::Vector2f &mousePos)
 {
 	sf::Vector2f localMousePos = mapGlobalToLocal(mousePos);
 
-	GuiElement *childUnderMouse = findChildAt(localMousePos);
+	if (handleChildPress(pressed, localMousePos))
+		return;
 
-	if (pressed)
-	{
-		if (childUnderMouse)
-		{
-			if (IPressable *pressableChild = dynamic_cast<IPressable *>(childUnderMouse))
-			{
-				pressableChild->setPressedState(true, localMousePos);
-				m_pressedChild = childUnderMouse;
-				return;
-			}
-		}
-	}
-	else
-	{
-		if (m_pressedChild)
-		{
-			if (childUnderMouse == m_pressedChild)
-			{
-				if (IClickable *clickableChild = dynamic_cast<IClickable *>(m_pressedChild))
-					clickableChild->executeClickAction();
-			}
-
-			if (IPressable *pressableChild = dynamic_cast<IPressable *>(m_pressedChild))
-				pressableChild->setPressedState(false, localMousePos);
-		}
-
-		// Reseta todos os estados
-		m_isPressed = false;
-		m_pressedChild = nullptr;
-
-		closeButton->setPressedState(false, localMousePos);
-		for (auto &button : buttons)
-			button.setPressedState(false, localMousePos);
-	}
+	m_isPressed = pressed ? true : false;
 }
 
 void gui::DialogBox::onFocusChanged(bool focused)

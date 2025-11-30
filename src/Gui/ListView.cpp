@@ -2,7 +2,7 @@
 #include "ListView.hpp"
 
 gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, std::unique_ptr<const IListViewAdapter> adapter)
-	: GuiElement(position), m_adapter(std::move(adapter)), m_viewport(position, size)
+	: Container(position), m_adapter(std::move(adapter)), m_viewport(position, size)
 {
 	float scrollWidth = 10.0f;
 	float backgroundSizeX = size.x - scrollWidth;
@@ -43,41 +43,14 @@ void gui::ListView::handleMouseInput(sf::Event event, const sf::Vector2f &mouseP
 
 void gui::ListView::setPressedState(bool pressed, const sf::Vector2f &mousePos)
 {
-	sf::Vector2f listViewLocalMousePos = mapGlobalToLocal(mousePos);
+	sf::Vector2f localMousePos = mapGlobalToLocal(mousePos);
 
-	GuiElement *childUnderMouse = findChildAt(listViewLocalMousePos);
+	if (handleChildPress(pressed, localMousePos))
+		return;
 
-	if (pressed)
+	if (!pressed)
 	{
-		if (childUnderMouse)
-		{
-			if (IPressable *pressableChild = dynamic_cast<IPressable *>(childUnderMouse))
-			{
-				pressableChild->setPressedState(true, listViewLocalMousePos);
-				m_pressedChild = childUnderMouse;
-				return;
-			}
-		}
-	}
-	else
-	{
-		if (m_pressedChild)
-		{
-			if (childUnderMouse == m_pressedChild)
-			{
-				if (IClickable *clickableChild = dynamic_cast<IClickable *>(m_pressedChild))
-					clickableChild->executeClickAction();
-			}
-
-			if (IPressable *pressableChild = dynamic_cast<IPressable *>(m_pressedChild))
-				pressableChild->setPressedState(false, listViewLocalMousePos);
-		}
-
-		// Reseta todos os estados
-		m_isPressed = false;
-		m_pressedChild = nullptr;
-
-		m_scrollBar->setPressedState(false, listViewLocalMousePos);
+		m_scrollBar->setPressedState(false, localMousePos);
 	}
 }
 
