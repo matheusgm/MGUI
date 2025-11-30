@@ -1,13 +1,18 @@
 #include "../stdafx.hpp"
 #include "Canvas.hpp"
+#include "Base/GuiElement.hpp"
+#include "FocusElementManager.hpp"
+#include "TextBox.hpp"
 #include "Interfaces/IScrollable.hpp"
 #include "Interfaces/IPressable.hpp"
 #include "Interfaces/IClickable.hpp"
 
-gui::Canvas::Canvas() : m_focusManager(gui::FocusElementManager::getInstance())
+gui::Canvas::Canvas() : m_focusManager(new gui::FocusElementManager())
 {
     resetFocus();
 }
+
+gui::Canvas::~Canvas() = default;
 
 void gui::Canvas::update(sf::Time deltaTime)
 {
@@ -22,12 +27,12 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 
     if (auto keyPressed = sfEvent.getIf<sf::Event::KeyPressed>())
     {
-        if (m_focusManager.getFocusedElement() == nullptr)
+        if (m_focusManager->getFocusedElement() == nullptr)
         {
             gui::TextBox *textBoxToFocus = findPreferredTextBoxToFocus();
             if (textBoxToFocus && keyPressed->code == textBoxToFocus->getPrimaryFocusTargetKey())
             {
-                m_focusManager.setFocusElement(textBoxToFocus);
+                m_focusManager->setFocusElement(textBoxToFocus);
 
                 // ANULAR o evento TextEntered
                 m_ignoreNextTextEntered = true;
@@ -43,9 +48,9 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
             m_ignoreNextTextEntered = false;
             return;
         }
-        if (m_focusManager.handleKeyboardInput(sfEvent))
-            gui::FocusElementManager::getInstance().clearFocus();
-            
+        if (m_focusManager->handleKeyboardInput(sfEvent))
+            resetFocus();
+
         return;
     }
 
@@ -64,7 +69,7 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
     // 3. TRATAMENTO DE CLIQUES E PRESSIONAMENTO (IPressable / IClickable)
     if (sfEvent.getIf<sf::Event::MouseButtonPressed>())
     {
-        m_focusManager.setFocusElement(elementUnderMouse);
+        m_focusManager->setFocusElement(elementUnderMouse);
 
         if (elementUnderMouse)
         {
@@ -156,7 +161,7 @@ void gui::Canvas::addElement(std::unique_ptr<GuiElement> element)
 
 void gui::Canvas::resetFocus()
 {
-    m_focusManager.clearFocus();
+    m_focusManager->clearFocus();
 }
 
 void gui::Canvas::checkFocusChange(const sf::Vector2f &mousePos)
@@ -173,9 +178,9 @@ void gui::Canvas::checkFocusChange(const sf::Vector2f &mousePos)
     }
 
     if (newFocus)
-        m_focusManager.setFocusElement(newFocus);
+        m_focusManager->setFocusElement(newFocus);
     else
-        m_focusManager.clearFocus();
+        resetFocus();
 }
 
 gui::GuiElement *gui::Canvas::findElementAt(const sf::Vector2f &mousePos)

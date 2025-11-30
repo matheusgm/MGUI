@@ -1,4 +1,5 @@
 #include "../stdafx.hpp"
+#include "Base/GuiElement.hpp"
 #include "FocusElementManager.hpp"
 #include "Interfaces/IFocusable.hpp"
 #include "Interfaces/IKeyboardInput.hpp"
@@ -55,10 +56,4 @@ bool gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
     }
 
     return false;
-}
-
-gui::FocusElementManager &gui::FocusElementManager::getInstance()
-{
-    static FocusElementManager instance;
-    return instance;
 }

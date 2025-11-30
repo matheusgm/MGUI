@@ -1,15 +1,16 @@
 #pragma once
-#include "Base/GuiElement.hpp"
-#include "FocusElementManager.hpp"
-#include "TextBox.hpp"
 
 namespace gui
 {
+    class FocusElementManager;
+    class TextBox;
+    class GuiElement;
+
     class Canvas
     {
     public:
         Canvas();
-        ~Canvas() = default;
+        ~Canvas();
 
         void update(sf::Time deltaTime);
         void handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos);
@@ -25,7 +26,7 @@ namespace gui
     private:
         std::vector<std::unique_ptr<GuiElement>> m_elements;
 
-        FocusElementManager &m_focusManager;
+        std::unique_ptr<FocusElementManager> m_focusManager;
 
         GuiElement *m_pressedElement = nullptr;
         bool m_ignoreNextTextEntered = false;
