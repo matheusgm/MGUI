@@ -1,23 +1,26 @@
 #include "../stdafx.hpp"
 #include "FocusElementManager.hpp"
+#include "Interfaces/IFocusable.hpp"
+#include "Interfaces/IKeyboardInput.hpp"
 
 void gui::FocusElementManager::setFocusElement(GuiElement *element)
 {
-    // 1. Desfoca o elemento atualmente focado (se houver e for diferente do novo)
+    IFocusable *newFocusable = dynamic_cast<IFocusable *>(element);
+
     if (m_focusedElement != element && m_focusedElement != nullptr)
     {
-        // Notifica o elemento anterior sobre a perda de foco
-        m_focusedElement->onFocusChanged(false);
+        if (IFocusable *oldFocusable = dynamic_cast<IFocusable *>(m_focusedElement))
+            oldFocusable->onFocusChanged(false);
     }
 
-    // 2. Define o novo elemento
-    m_focusedElement = element;
-
-    // 3. Notifica o novo elemento que ele está focado (se for válido)
-    if (m_focusedElement != nullptr)
+    if (newFocusable != nullptr)
     {
-        // Notifica o novo elemento sobre o ganho de foco
-        m_focusedElement->onFocusChanged(true);
+        m_focusedElement = element;
+        newFocusable->onFocusChanged(true);
+    }
+    else
+    {
+        clearFocus();
     }
 }
 
@@ -26,10 +29,29 @@ void gui::FocusElementManager::clearFocus()
     if (m_focusedElement != nullptr)
     {
         // Notifica o elemento atual sobre a perda de foco
-        m_focusedElement->onFocusChanged(false);
-        cout << "Limpou" << endl;
+        if (IFocusable *focusable = dynamic_cast<IFocusable *>(m_focusedElement))
+        {
+            focusable->onFocusChanged(false);
+            cout << "Limpou" << endl;
+        }
+
         // Limpa o rastreador
         m_focusedElement = nullptr;
+    }
+}
+
+void gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
+{
+    if (m_focusedElement != nullptr)
+    {
+        // Verifica se o elemento focado implementa a interface de input de teclado
+        if (IKeyboardInput *keyboardInput = dynamic_cast<IKeyboardInput *>(m_focusedElement))
+        {
+            // Delega o evento de teclado para o elemento focado
+            keyboardInput->handleKeyboardInput(sfEvent);
+        }
+        // Se o elemento estiver focado, mas não for IKeyboardInput (ex: um botão),
+        // o evento é silenciosamente ignorado, o que é o comportamento desejado.
     }
 }
 

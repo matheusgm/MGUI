@@ -29,40 +29,14 @@ gui::Slider::Slider(sf::Vector2f position, sf::Vector2f size,
 	updateIndicatorPosition();
 }
 
-void gui::Slider::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
-{
-	sf::Transform indicatorTotalTransform = getTransform() * indicatorShape.getTransform();
-
-	sf::FloatRect indicatorGlobalBounds = indicatorTotalTransform.transformRect(indicatorShape.getLocalBounds());
-
-	if (indicatorGlobalBounds.contains(mousePos))
-	{
-		if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseButtonPressed>())
-		{
-			if (mouseEvent->button == sf::Mouse::Button::Left)
-			{
-				indicatorPressed = true;
-				sf::Vector2f indicatorCenterGlobal = getTransform().transformPoint(
-					indicatorShape.getPosition());
-				dragOffsetX = mousePos.x - indicatorCenterGlobal.x;
-			}
-		}
-	}
-
-	if (indicatorPressed)
-	{
-		if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseButtonReleased>())
-		{
-			if (mouseEvent->button == sf::Mouse::Button::Left)
-				indicatorPressed = false;
-		}
-		else if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseMoved>())
-			handleDrag(mousePos);
-	}
-}
-
 void gui::Slider::update(sf::Time deltaTime)
 {
+}
+
+void gui::Slider::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
+{
+	if (indicatorPressed)
+		handleDrag(mousePos);
 }
 
 sf::FloatRect gui::Slider::getLocalBounds() const
@@ -70,12 +44,35 @@ sf::FloatRect gui::Slider::getLocalBounds() const
 	return backgroundShape.getLocalBounds();
 }
 
-void gui::Slider::setSize(const sf::Vector2f &newSize)
+void gui::Slider::setPressedState(bool pressed, const sf::Vector2f &mousePos)
 {
-	backgroundShape.setSize(newSize);
+	m_isPressed = pressed;
+	
+	if (pressed)
+	{
+		sf::Transform indicatorTotalTransform = getTransform() * indicatorShape.getTransform();
+		sf::FloatRect indicatorGlobalBounds = indicatorTotalTransform.transformRect(indicatorShape.getLocalBounds());
 
-	updateIndicatorPosition();
+		if (indicatorGlobalBounds.contains(mousePos))
+		{
+			indicatorPressed = true; // Capturou o handle
+			sf::Vector2f indicatorCenterGlobal = getTransform().transformPoint(indicatorShape.getPosition());
+			dragOffsetX = mousePos.x - indicatorCenterGlobal.x;
+		}
+	}
+	else
+	{
+		indicatorPressed = false;
+		dragOffsetX = 0.0f;
+	}
 }
+
+// void gui::Slider::setSize(const sf::Vector2f &newSize)
+// {
+// 	backgroundShape.setSize(newSize);
+
+// 	updateIndicatorPosition();
+// }
 
 void gui::Slider::draw(sf::RenderTarget &target, sf::RenderStates states) const
 {

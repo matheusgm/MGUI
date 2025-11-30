@@ -11,7 +11,7 @@ gui::Select::Select(sf::Vector2f position, sf::Vector2f size)
 	shape.setOutlineColor(sf::Color::Black);
 }
 
-void gui::Select::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
+void gui::Select::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
 {
 }
 

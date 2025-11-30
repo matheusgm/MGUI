@@ -1,6 +1,8 @@
 #include "stdafx.hpp"
 #include "DialogBoxState.hpp"
 #include "Gui/DialogTree.hpp"
+#include "Gui/DialogBox.hpp"
+#include "Gui/Button.hpp"
 
 DialogBoxState::DialogBoxState(StateData &state_data)
 	: State(state_data)
@@ -11,6 +13,7 @@ DialogBoxState::DialogBoxState(StateData &state_data)
 	onResizeWindow();
 
 	background.setFillColor(sf::Color::Green);
+	background.setSize(sf::Vector2f(state_data.window->getSize()));
 }
 
 void DialogBoxState::updateKeyboardInput(sf::Event &sfEvent)
@@ -19,11 +22,8 @@ void DialogBoxState::updateKeyboardInput(sf::Event &sfEvent)
 
 void DialogBoxState::updateEvents(sf::Event &sfEvent)
 {
-	updateKeyboardInput(sfEvent);
-	for (auto &it : buttons)
-		it.second->updateEvents(sfEvent, mousePosView);
-
-	dialogBox->updateEvents(sfEvent, mousePosView);
+	if (m_guiCanvas)
+		m_guiCanvas->handleEvent(sfEvent, mousePosView);
 }
 
 void DialogBoxState::onResizeWindow()
@@ -31,55 +31,40 @@ void DialogBoxState::onResizeWindow()
 	sf::Vector2f window_center = getWindowCenter();
 	sf::Vector2u window_size = data.window->getSize();
 
-	float gap = 50.f;
+	// float gap = 50.f;
 
-	// Background
-	background.setSize(
-		sf::Vector2f(
-			static_cast<float>(window_size.x),
-			static_cast<float>(window_size.y)));
+	// // Background
+	// background.setSize(
+	// 	sf::Vector2f(
+	// 		static_cast<float>(window_size.x),
+	// 		static_cast<float>(window_size.y)));
 
-	// Buttons
-	buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
-}
-
-void DialogBoxState::updateGui(sf::Time deltaTime) const
-{
-	/* Updates all the gui in the state and handles their functionality */
-	// Buttons
-	for (auto &it : buttons)
-		it.second->update(deltaTime);
-
-	dialogBox->update(deltaTime);
+	// // Buttons
+	// buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
 }
 
 void DialogBoxState::update(sf::Time deltaTime)
 {
 	updateMousePositions();
+	updateKeytime(deltaTime);
 
-	updateGui(deltaTime);
-
-	if (dialogTree->nodeHasChanged())
+	if (!this->paused)
 	{
-		cout << "Mudou" << endl;
-		dialogTree->resetNodeChangedFlag();
-		dialogBox->loadNode(dialogTree->current());
+		// Atualiza a lógica de tempo do Canvas (cursor piscando, animações)
+		if (m_guiCanvas)
+		{
+			m_guiCanvas->handleContinuousMouseInput(mousePosView);
+			m_guiCanvas->update(deltaTime);
+		}
 	}
-}
-
-void DialogBoxState::renderGui(sf::RenderTarget &target) const
-{
-	for (auto &it : buttons)
-		target.draw(*it.second);
-
-	target.draw(*dialogBox);
 }
 
 void DialogBoxState::render(sf::RenderTarget &target)
 {
 	target.draw(background);
 
-	renderGui(target);
+	if (m_guiCanvas)
+		m_guiCanvas->draw(target);
 }
 
 void DialogBoxState::initVariables()
@@ -106,14 +91,16 @@ void DialogBoxState::initKeybinds()
 
 void DialogBoxState::initGui()
 {
-	buttons["BACK"] = std::make_unique<gui::Button>(
+	m_guiCanvas = std::make_unique<gui::Canvas>();
+
+	auto btnBack = std::make_unique<gui::Button>(
 		sf::Vector2f(100.f, 100.f),
 		sf::Vector2f(150.f, 50.f), "Back", 32);
 
-	// Button functionality
-	// Quit the game
-	buttons["BACK"]->onPressed([this]
-							   { endState(); });
+	btnBack->onPressed([this]
+					   { endState(); });
+
+	m_guiCanvas->addElement(std::move(btnBack));
 
 	// DIALOG BOX ====================================
 
@@ -134,11 +121,20 @@ void DialogBoxState::initGui()
 	root->options["No"] = nodeNo;
 
 	dialogTree = std::make_unique<gui::DialogTree>(root);
-	dialogBox = std::make_unique<gui::DialogBox>(sf::Vector2f(150.f, 200.f), sf::Vector2f(600.f, 250.f));
+	auto dialogBox = std::make_unique<gui::DialogBox>(sf::Vector2f(150.f, 200.f), sf::Vector2f(600.f, 250.f));
 	dialogBox->loadNode(dialogTree->current());
 
-	dialogBox->setChoiceCallback([&](const std::string &choice)
-								 { dialogTree->choose(choice); });
+	dialogBox->setChoiceCallback([&](gui::DialogBox *self, const std::string &choice)
+								 {
+									dialogTree->choose(choice);
+									if (dialogTree->nodeHasChanged())
+									{
+										cout << "Mudou" << endl;
+										dialogTree->resetNodeChangedFlag();
+										self->loadNode(dialogTree->current());
+									} });
+
+	m_guiCanvas->addElement(std::move(dialogBox));
 
 	// std::vector<std::string> dialogTexts = { "Texto 1", "Texto 2", "Texto 3" };
 	// size_t currentDialogIndex = 0;

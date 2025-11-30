@@ -8,8 +8,8 @@ namespace gui
         Select(sf::Vector2f position, sf::Vector2f size);
         virtual ~Select() = default;
 
-        void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
-        void update(sf::Time deltaTime) override;
+        virtual void handleMouseInput(sf::Event event, const sf::Vector2f &mousePos) override;
+        virtual void update(sf::Time deltaTime) override;
         
         virtual sf::FloatRect getLocalBounds() const override;
 

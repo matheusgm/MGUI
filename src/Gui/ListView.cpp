@@ -24,34 +24,74 @@ gui::ListView::ListView(const sf::Vector2f &position, const sf::Vector2f &size, 
 	setupScrollBar();
 }
 
-void gui::ListView::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
+void gui::ListView::update(sf::Time deltaTime)
+{
+	if (m_scrollBar)
+		m_scrollBar->update(deltaTime);
+}
+
+void gui::ListView::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
 {
 	sf::Vector2f listViewLocalMousePos = mapGlobalToLocal(mousePos);
 
 	if (m_scrollBar)
-	{
-		m_scrollBar->updateEvents(sfEvent, listViewLocalMousePos);
-	}
+		m_scrollBar->handleMouseInput(event, listViewLocalMousePos);
 
-	if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseWheelScrolled>())
+	// for (auto &item : m_children)
+	// 	item->handleMouseInput(listViewLocalMousePos);
+}
+
+void gui::ListView::setPressedState(bool pressed, const sf::Vector2f &mousePos)
+{
+	sf::Vector2f listViewLocalMousePos = mapGlobalToLocal(mousePos);
+
+	GuiElement *childUnderMouse = findChildAt(listViewLocalMousePos);
+
+	if (pressed)
 	{
-		if (getGlobalBounds().contains(mousePos) && m_scrollBar)
+		if (childUnderMouse)
 		{
-			int scrollValue = m_scrollBar->getValue();
-			scrollValue -= static_cast<int>(mouseEvent->delta);
-
-			m_scrollBar->setValue(scrollValue);
-
-			calculateScrollLayout();
+			if (IPressable *pressableChild = dynamic_cast<IPressable *>(childUnderMouse))
+			{
+				pressableChild->setPressedState(true, listViewLocalMousePos);
+				m_pressedChild = childUnderMouse;
+				return;
+			}
 		}
+	}
+	else
+	{
+		if (m_pressedChild)
+		{
+			if (childUnderMouse == m_pressedChild)
+			{
+				if (IClickable *clickableChild = dynamic_cast<IClickable *>(m_pressedChild))
+					clickableChild->executeClickAction();
+			}
+
+			if (IPressable *pressableChild = dynamic_cast<IPressable *>(m_pressedChild))
+				pressableChild->setPressedState(false, listViewLocalMousePos);
+		}
+
+		// Reseta todos os estados
+		m_isPressed = false;
+		m_pressedChild = nullptr;
+
+		m_scrollBar->setPressedState(false, listViewLocalMousePos);
 	}
 }
 
-void gui::ListView::update(sf::Time deltaTime)
+void gui::ListView::scrollWheel(int delta)
 {
+	if (!m_scrollBar)
+		return;
 
-	if (m_scrollBar)
-		m_scrollBar->update(deltaTime);
+	int scrollValue = m_scrollBar->getValue();
+	scrollValue -= delta;
+
+	m_scrollBar->setValue(scrollValue);
+
+	calculateScrollLayout();
 }
 
 sf::FloatRect gui::ListView::getLocalBounds() const
@@ -166,4 +206,12 @@ void gui::ListView::setupScrollBar()
 	float contentRatio = m_viewport.size.y / totalContentHeight;
 
 	m_scrollBar->setIndicatorHeightRatio(contentRatio);
+}
+
+gui::GuiElement *gui::ListView::findChildAt(const sf::Vector2f &mousePos)
+{
+	if (m_scrollBar->contains(mousePos))
+		return m_scrollBar.get();
+
+	return nullptr;
 }

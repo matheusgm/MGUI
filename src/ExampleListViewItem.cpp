@@ -12,7 +12,7 @@ ExampleListViewItem::ExampleListViewItem(const sf::Font &font, float height) : m
     m_productName.setPosition({10.0f, height * 0.2f});
 }
 
-void ExampleListViewItem::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
+void ExampleListViewItem::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
 {
 }
 

@@ -7,24 +7,25 @@ namespace gui
     class FocusElementManager
     {
     public:
-        static FocusElementManager& getInstance();
+        static FocusElementManager &getInstance();
 
-        void setFocusElement(GuiElement* element);
+        void setFocusElement(GuiElement *element);
         void clearFocus();
-        
-        void registerElement(GuiElement* element);
-        void unregisterElement(GuiElement* element);
-        
-        GuiElement* getFocusedElement() const { return m_focusedElement; }
+
+        void handleKeyboardInput(const sf::Event &sfEvent);
+
+        void registerElement(GuiElement *element); // Se for usar TAB
+        void unregisterElement(GuiElement *element); // Se for usar TAB
+
+        GuiElement *getFocusedElement() const { return m_focusedElement; }
 
     private:
         FocusElementManager() = default;
         ~FocusElementManager() = default;
-        FocusElementManager(const FocusElementManager&) = delete;
-        FocusElementManager& operator=(const FocusElementManager&) = delete;
+        FocusElementManager(const FocusElementManager &) = delete;
+        FocusElementManager &operator=(const FocusElementManager &) = delete;
 
         GuiElement *m_focusedElement = nullptr;
-        std::vector<GuiElement*> m_focusableElements;
-
+        //std::vector<GuiElement *> m_focusableElements; // Se for usar TAB
     };
 }

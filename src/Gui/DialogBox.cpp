@@ -43,16 +43,6 @@ gui::DialogBox::DialogBox(sf::Vector2f position, sf::Vector2f size)
 //	return new DialogBox(x, y, w, h, buttons);
 // }
 
-void gui::DialogBox::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
-{
-	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
-
-	closeButton->updateEvents(sfEvent, scrollLocalMousePos);
-
-	for (auto &btn : buttons)
-		btn.updateEvents(sfEvent, scrollLocalMousePos);
-}
-
 void gui::DialogBox::update(sf::Time deltaTime)
 {
 	closeButton->update(deltaTime);
@@ -61,9 +51,66 @@ void gui::DialogBox::update(sf::Time deltaTime)
 		btn.update(deltaTime);
 }
 
+void gui::DialogBox::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
+{
+	sf::Vector2f localMousePos = mapGlobalToLocal(mousePos);
+
+	closeButton->handleMouseInput(event, localMousePos);
+
+	for (auto &btn : buttons)
+		btn.handleMouseInput(event, localMousePos);
+}
+
 sf::FloatRect gui::DialogBox::getLocalBounds() const
 {
 	return shape.getLocalBounds();
+}
+
+void gui::DialogBox::setPressedState(bool pressed, const sf::Vector2f &mousePos)
+{
+	sf::Vector2f localMousePos = mapGlobalToLocal(mousePos);
+
+	GuiElement *childUnderMouse = findChildAt(localMousePos);
+
+	if (pressed)
+	{
+		if (childUnderMouse)
+		{
+			if (IPressable *pressableChild = dynamic_cast<IPressable *>(childUnderMouse))
+			{
+				pressableChild->setPressedState(true, localMousePos);
+				m_pressedChild = childUnderMouse;
+				return;
+			}
+		}
+	}
+	else
+	{
+		if (m_pressedChild)
+		{
+			if (childUnderMouse == m_pressedChild)
+			{
+				cout << "CLicked" << endl;
+				if (IClickable *clickableChild = dynamic_cast<IClickable *>(m_pressedChild))
+					clickableChild->executeClickAction();
+			}
+
+			if (IPressable *pressableChild = dynamic_cast<IPressable *>(m_pressedChild))
+				pressableChild->setPressedState(false, localMousePos);
+		}
+
+		// Reseta todos os estados
+		m_isPressed = false;
+		m_pressedChild = nullptr;
+
+		closeButton->setPressedState(false, localMousePos);
+		for (auto &button : buttons)
+			button.setPressedState(false, localMousePos);
+	}
+}
+
+void gui::DialogBox::onFocusChanged(bool focused)
+{
 }
 
 void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
@@ -88,7 +135,7 @@ void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
 		x -= btnWidth;
 		gui::Button btn({x, y}, {btnWidth, btnHeight}, "Ok");
 		btn.onPressed([this]()
-					  { if (choiceCallback) choiceCallback("Ok"); });
+					  { if (choiceCallback) choiceCallback(this, "Ok"); });
 		buttons.emplace_back(std::move(btn));
 	}
 	else
@@ -99,7 +146,7 @@ void gui::DialogBox::loadNode(const std::shared_ptr<DialogNode> &node)
 		{
 			gui::Button btn({x, y}, {btnWidth, btnHeight}, label);
 			btn.onPressed([this, label]()
-						  { if (choiceCallback) choiceCallback(label); });
+						  {if (choiceCallback) choiceCallback(this, label); });
 			buttons.emplace_back(std::move(btn));
 			x += btnWidth + btnSpacing;
 		}
@@ -134,4 +181,18 @@ sf::Font &gui::DialogBox::loadFont()
 	}
 
 	return *defaultFont;
+}
+
+gui::GuiElement *gui::DialogBox::findChildAt(const sf::Vector2f &mousePos)
+{
+	if (closeButton->contains(mousePos))
+		return closeButton.get();
+
+	for (auto &button : buttons)
+	{
+		if (button.contains(mousePos))
+			return &button;
+	}
+
+	return nullptr;
 }

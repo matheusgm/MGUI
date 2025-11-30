@@ -25,56 +25,22 @@ gui::TextBox::TextBox(sf::Vector2f position, sf::Vector2f size) : GuiElement(pos
     alignText();
 }
 
-void gui::TextBox::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
+void gui::TextBox::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
 {
-    if (auto keyPressed = sfEvent.getIf<sf::Event::KeyPressed>())
+    if (m_isBeingSelected)
     {
-        if (m_isSelected)
-        {
-            if (keyPressed->code == cancellationKey)
-            {
-                if (onTextCanceled)
-                    onTextCanceled();
-
-                gui::FocusElementManager::getInstance().clearFocus();
-                return;
-            }
-
-            if (keyPressed->code == activationKey)
-            {
-                cout << "Submit Texto"<< endl;
-                if (onTextSubmitted)
-                    onTextSubmitted(m_inputString);
-
-                gui::FocusElementManager::getInstance().clearFocus();
-                return;
-            }
-        }
+        sf::Vector2f localMousePos = mapGlobalToLocal(mousePos);
+        updateTextSelection(localMousePos);
     }
-
-    if (auto mouseClicked = sfEvent.getIf<sf::Event::MouseButtonPressed>())
+    else
     {
-        if (mouseClicked->button == sf::Mouse::Button::Left)
-        {
-            // Mapeia a posição global do mouse para os limites globais do TextBox
-            sf::FloatRect globalBounds = getTransform().transformRect(m_background.getLocalBounds());
-
-            if (globalBounds.contains(mousePos))
-            {
-                setSelected(true); // Foca se o clique foi DENTRO
-                return;
-            }
-            // Não precisamos de um 'else' aqui para desfocar,
-            // pois o GuiManager lida com o clique fora de TODOS os elementos.
-        }
+        // Lógica de Hover (mudar cor da borda quando o mouse passa)
     }
-
-    handleTextEnteredEvent(sfEvent);
 }
 
 void gui::TextBox::update(sf::Time deltaTime)
 {
-    if (m_isSelected)
+    if (m_isFocused)
     {
         if (m_cursorClock.getElapsedTime().asSeconds() >= m_cursorBlinkRate)
         {
@@ -94,38 +60,75 @@ sf::FloatRect gui::TextBox::getLocalBounds() const
     return m_background.getLocalBounds();
 }
 
-void gui::TextBox::setSize(const sf::Vector2f &newSize)
+// void gui::TextBox::setSize(const sf::Vector2f &newSize)
+// {
+//     m_background.setSize(newSize);
+//     alignText();
+// }
+
+void gui::TextBox::onFocusChanged(bool focused)
 {
-    m_background.setSize(newSize);
-    alignText();
-}
+    m_isFocused = focused;
 
-void gui::TextBox::onFocusChanged(bool focus)
-{
-    if (m_isSelected == focus)
-        return;
-
-    m_isSelected = focus;
-
-    if (focus)
+    if (focused)
     {
         m_background.setOutlineColor(sf::Color::Blue);
         m_showCursor = true;
         m_cursorClock.restart();
-    }else{
+    }
+    else
+    {
         m_background.setOutlineColor(sf::Color::Black);
+        m_showCursor = false;
     }
 
-    updateText();
+    updateVisualState();
 }
 
-void gui::TextBox::setSelected(bool select)
+void gui::TextBox::setPressedState(bool pressed, const sf::Vector2f &mousePos)
 {
-    if (m_isSelected == select)
-        return;
+    m_isPressed = pressed;
 
-    if (select)
-        gui::FocusElementManager::getInstance().setFocusElement(this);
+    if (pressed)
+    {
+        sf::Vector2f localMousePos = mapGlobalToLocal(mousePos);
+
+        positionCursor(localMousePos);
+
+        m_isBeingSelected = true;
+    }
+    else
+    {
+        m_isBeingSelected = false;
+    }
+}
+
+void gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
+{
+    if (auto textEntered = sfEvent.getIf<sf::Event::TextEntered>())
+        handleTextEnteredEvent(*textEntered);
+
+    if (auto keyPressed = sfEvent.getIf<sf::Event::KeyPressed>())
+    {
+        if (keyPressed->code == cancellationKey)
+        {
+            if (onTextCanceled)
+                onTextCanceled();
+
+            gui::FocusElementManager::getInstance().clearFocus();
+            return;
+        }
+
+        if (keyPressed->code == activationKey)
+        {
+            if (onTextSubmitted)
+                onTextSubmitted(m_inputString);
+
+            gui::FocusElementManager::getInstance().clearFocus();
+            return;
+        }
+        // ... Lógica para setas (Left/Right), Home, End, etc.
+    }
 }
 
 void gui::TextBox::draw(sf::RenderTarget &target, sf::RenderStates states) const
@@ -135,40 +138,48 @@ void gui::TextBox::draw(sf::RenderTarget &target, sf::RenderStates states) const
     target.draw(m_background, states);
     target.draw(m_text, states);
 
-    if (m_isSelected && m_showCursor)
+    if (m_isFocused && m_showCursor)
         target.draw(m_cursor, states);
 }
 
-void gui::TextBox::handleTextEnteredEvent(sf::Event &event)
+void gui::TextBox::handleTextEnteredEvent(const sf::Event::TextEntered &textEvent)
 {
-    if (m_isSelected)
+    if (!m_isFocused)
+        return;
+
+    auto unicode = textEvent.unicode;
+
+    if (unicode == 8) // Backspace
     {
-        if (auto textEntered = event.getIf<sf::Event::TextEntered>())
-        {
-            auto unicode = textEntered->unicode;
-            const size_t MAX_CHARS = 50; // Limite de 50 caracteres
-
-            if (unicode == 8) // Backspace
-            {
-                if (!m_inputString.empty())
-                    m_inputString.pop_back();
-            }
-            else if (unicode == 13 || unicode == 27) // Ignora Enter (13) e Escape (27) no TextEntered
-            {
-                return;
-            }
-            else if (unicode >= 32 && unicode <= 126) // Caracteres imprimíveis ASCII (pode ser estendido para UTF-8)
-            {
-                if (m_inputString.size() < MAX_CHARS)
-                    m_inputString += static_cast<char>(unicode);
-            }
-
-            // Reseta o relógio e mostra o cursor após a entrada de texto
-            m_showCursor = true;
-            m_cursorClock.restart();
-            updateText();
-        }
+        if (!m_inputString.empty())
+            m_inputString.pop_back();
     }
+    else if (unicode == 13 || unicode == 27) // Ignora Enter (13) e Escape (27)
+    {
+        return;
+    }
+    else if (unicode >= 32 && unicode <= 126) // Caracteres imprimíveis
+    {
+        if (m_inputString.size() < MAX_CHARS)
+            m_inputString += static_cast<char>(unicode);
+    }
+
+    // Reseta o relógio e mostra o cursor após a entrada de texto
+    m_showCursor = true;
+    m_cursorClock.restart();
+    updateText();
+}
+
+void gui::TextBox::updateVisualState()
+{
+}
+
+void gui::TextBox::positionCursor(const sf::Vector2f &localMousePos)
+{
+}
+
+void gui::TextBox::updateTextSelection(const sf::Vector2f &localMousePos)
+{
 }
 
 void gui::TextBox::alignText()

@@ -6,7 +6,7 @@ class ExampleListViewItem : public gui::ListViewItem
 public:
     ExampleListViewItem(const sf::Font &font, float height);
 
-    void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos);
+    virtual void handleMouseInput(sf::Event event, const sf::Vector2f &mousePos) override;
     void update(sf::Time deltaTime);
     virtual sf::FloatRect getLocalBounds() const override;
 

@@ -1,20 +1,25 @@
 #pragma once
 #include "Base/GuiElement.hpp"
+#include "Interfaces/IScrollable.hpp"
 #include "Button.hpp"
 
 namespace gui
 {
-    class Scroll : public GuiElement
+    class Scroll : public GuiElement, public IPressable, public IScrollable
     {
     public:
         Scroll(sf::Vector2f position, sf::Vector2f size);
         virtual ~Scroll() = default;
 
-        void updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos) override;
-        void update(sf::Time deltaTime) override;
+        virtual void handleMouseInput(sf::Event event, const sf::Vector2f &mousePos) override;
+        virtual void update(sf::Time deltaTime) override;
         virtual sf::FloatRect getLocalBounds() const override;
 
-        void scrollWheel(int delta);
+        // Implementações de IPressable
+        virtual void setPressedState(bool pressed, const sf::Vector2f &mousePos) override;
+        virtual bool isBeingPressed() const override { return m_isPressed; }
+
+        virtual void scrollWheel(int delta);
 
         int getValue() const { return value; };
         int getMinValue() const { return minValue; };
@@ -37,18 +42,23 @@ namespace gui
 
         std::function<void()> onValueChangeCallback = []() {};
 
+        GuiElement *m_pressedChild = nullptr;
+
+        bool m_isPressed = false;
+        bool m_thumbPressed = false;
+
         int minValue = 0;
         int maxValue = 100;
         int step = 1;
         int value = 0;
         float indicatorHeight = 50.f;
         float dragOffsetY = 0.f;
-        bool indicatorPressed = false;
 
         void clampValue();
         void updateIndicatorPosition();
         void handleDrag(const sf::Vector2f &mousePos);
         float getButtonUpHeight() const { return buttonUp->getSize().y; };
         float getTrackHeight() const { return shape.getSize().y; };
+        GuiElement *findChildAt(const sf::Vector2f &mousePos);
     };
 }

@@ -1,5 +1,6 @@
 #include "stdafx.hpp"
 #include "MainMenuState.hpp"
+#include "Gui/Button.hpp"
 
 MainMenuState::MainMenuState(StateData &state_data)
 	: State(state_data)
@@ -9,6 +10,7 @@ MainMenuState::MainMenuState(StateData &state_data)
 	onResizeWindow();
 
 	background.setFillColor(sf::Color::Magenta);
+	background.setSize(sf::Vector2f(state_data.window->getSize()));
 }
 
 void MainMenuState::updateKeyboardInput(sf::Event &sfEvent)
@@ -17,9 +19,8 @@ void MainMenuState::updateKeyboardInput(sf::Event &sfEvent)
 
 void MainMenuState::updateEvents(sf::Event &sfEvent)
 {
-	updateKeyboardInput(sfEvent);
-	for (auto &it : buttons)
-		it.second->updateEvents(sfEvent, mousePosView);
+	if (m_guiCanvas)
+		m_guiCanvas->handleEvent(sfEvent, mousePosView);
 }
 
 void MainMenuState::onResizeWindow()
@@ -27,49 +28,46 @@ void MainMenuState::onResizeWindow()
 	sf::Vector2f window_center = getWindowCenter();
 	sf::Vector2u window_size = data.window->getSize();
 
-	float gap = 50.f;
+	// float gap = 50.f;
 
-	background.setSize(
-		sf::Vector2f(
-			static_cast<float>(window_size.x),
-			static_cast<float>(window_size.y)));
+	// background.setSize(
+	// 	sf::Vector2f(
+	// 		static_cast<float>(window_size.x),
+	// 		static_cast<float>(window_size.y)));
 
-	buttons["GAME_STATE"]->setPosition({window_center.x - 125.f, 0 + gap});
+	// buttons["GAME_STATE"]->setPosition({window_center.x - 125.f, 0 + gap});
 
-	gui::Button &firstBtn = *buttons["GAME_STATE"];
+	// gui::Button &firstBtn = *buttons["GAME_STATE"];
 
-	buttons["SETTINGS_STATE"]->setPosition({firstBtn.getLeft(), firstBtn.getBottom() + gap});
+	// buttons["SETTINGS_STATE"]->setPosition({firstBtn.getLeft(), firstBtn.getBottom() + gap});
 
-	gui::Button &secondBtn = *buttons["SETTINGS_STATE"];
+	// gui::Button &secondBtn = *buttons["SETTINGS_STATE"];
 
-	buttons["DIALOG_BOX_STATE"]->setPosition({firstBtn.getLeft(), secondBtn.getBottom() + gap});
-	buttons["EXIT_STATE"]->setPosition({firstBtn.getLeft(), window_size.y - 50.f - gap});
-}
-
-void MainMenuState::updateGui(sf::Time deltaTime) const
-{
-	for (auto &it : buttons)
-		it.second->update(deltaTime);
+	// buttons["DIALOG_BOX_STATE"]->setPosition({firstBtn.getLeft(), secondBtn.getBottom() + gap});
+	// buttons["EXIT_STATE"]->setPosition({firstBtn.getLeft(), window_size.y - 50.f - gap});
 }
 
 void MainMenuState::update(sf::Time deltaTime)
 {
 	updateMousePositions();
 
-	updateGui(deltaTime);
-}
-
-void MainMenuState::renderGui(sf::RenderTarget &target) const
-{
-	for (auto &it : buttons)
-		target.draw(*it.second);
+	if (!this->paused)
+	{
+		// Atualiza a lógica de tempo do Canvas (cursor piscando, animações)
+		if (m_guiCanvas)
+		{
+			m_guiCanvas->handleContinuousMouseInput(mousePosView);
+			m_guiCanvas->update(deltaTime);
+		}
+	}
 }
 
 void MainMenuState::render(sf::RenderTarget &target)
 {
 	target.draw(background);
 
-	renderGui(target);
+	if (m_guiCanvas)
+		m_guiCanvas->draw(target);
 }
 
 void MainMenuState::initKeybinds()
@@ -91,36 +89,43 @@ void MainMenuState::initKeybinds()
 
 void MainMenuState::initGui()
 {
+	m_guiCanvas = std::make_unique<gui::Canvas>();
+
 	// Buttons
-	buttons["GAME_STATE"] = std::make_unique<gui::Button>(
+	auto btnGameState = std::make_unique<gui::Button>(
 		sf::Vector2f(100.f, 100.f),
 		sf::Vector2f(250.f, 50.f),
 		&font, "New Game", 32);
 
-	buttons["SETTINGS_STATE"] = std::make_unique<gui::Button>(
+	m_guiCanvas->addElement(std::move(btnGameState));
+
+	auto btnSettingState = std::make_unique<gui::Button>(
 		sf::Vector2f(100.f, 200.f),
 		sf::Vector2f(250.f, 50.f),
 		&font, "Settings", 32);
 
-	buttons["DIALOG_BOX_STATE"] = std::make_unique<gui::Button>(
+	btnSettingState->onPressed([this]
+							   { data.states->push(std::make_unique<SettingsState>(data)); });
+
+	m_guiCanvas->addElement(std::move(btnSettingState));
+
+	auto btnDialogBoxState = std::make_unique<gui::Button>(
 		sf::Vector2f(100.f, 300.f),
 		sf::Vector2f(250.f, 50.f),
 		&font, "Dialog Box", 32);
 
-	buttons["EXIT_STATE"] = std::make_unique<gui::Button>(
-		sf::Vector2f(100.f, 300.f),
+	btnDialogBoxState->onPressed([this]
+								 { data.states->push(std::make_unique<DialogBoxState>(data)); });
+
+	m_guiCanvas->addElement(std::move(btnDialogBoxState));
+
+	auto btnExitState = std::make_unique<gui::Button>(
+		sf::Vector2f(100.f, 400.f),
 		sf::Vector2f(250.f, 50.f),
 		&font, "Quit", 32);
 
-	// Settings
-	buttons["SETTINGS_STATE"]->onPressed([this]
-										 { data.states->push(std::make_unique<SettingsState>(data)); });
+	btnExitState->onPressed([this]
+							{ endState(); });
 
-	// Dialog Box
-	buttons["DIALOG_BOX_STATE"]->onPressed([this]
-										   { data.states->push(std::make_unique<DialogBoxState>(data)); });
-
-	// Quit the game
-	buttons["EXIT_STATE"]->onPressed([this]
-									 { endState(); });
+	m_guiCanvas->addElement(std::move(btnExitState));
 }

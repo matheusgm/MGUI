@@ -4,6 +4,12 @@
 #include "Gui/ListViewAdapter.tpp"
 #include "ExampleListViewItem.hpp"
 #include "Gui/FocusElementManager.hpp"
+#include "Gui/Slider.hpp"
+#include "Gui/Button.hpp"
+#include "Gui/ListView.hpp"
+#include "Gui/Select.hpp"
+#include "Gui/Scroll.hpp"
+#include "Gui/TextBox.hpp"
 
 SettingsState::SettingsState(StateData &state_data)
 	: State(state_data), soundText(font), soundValue(font), debugLinePositionText(font, "", 16U)
@@ -14,6 +20,7 @@ SettingsState::SettingsState(StateData &state_data)
 	onResizeWindow();
 
 	background.setFillColor(sf::Color::Cyan);
+	background.setSize(sf::Vector2f(state_data.window->getSize()));
 
 	debugLinePositionText.setFillColor(sf::Color::Black);
 	debugLinePositionText.setPosition({5.f, 5.f});
@@ -21,96 +28,13 @@ SettingsState::SettingsState(StateData &state_data)
 
 void SettingsState::updateKeyboardInput(sf::Event &sfEvent)
 {
-	if (auto mousePressed = sfEvent.getIf<sf::Event::MouseButtonPressed>())
-	{
-		if (mousePressed->button == sf::Mouse::Button::Left)
-		{
-			// Se o clique foi processado por um elemento (selecionando-o),
-			// o FocusManager já atualizou o estado.
-
-			// Se o clique foi em um TextBox, ele chamou setFocusedElement(this).
-			// Se o clique foi fora de TODOS os elementos interativos:
-
-			// 🛑 CRUCIAL: Se o elemento focado atual for diferente do elemento
-			// onde o clique aconteceu, ou se ele for nullptr, limpe o foco.
-
-			// Simplificação (idealmente, cada elemento cuida de si ou você verifica colisões):
-			// Assumimos que o TextBox.updateEvents só chama setFocusedElement(this) se houve hit.
-			// Se o FocusManager ainda está com foco em 'X', mas o clique foi no fundo (miss),
-			// e X não se desfocou, vamos forçar o desfoco.
-
-			gui::GuiElement *focusedElement = gui::FocusElementManager::getInstance().getFocusedElement();
-			if (focusedElement != nullptr)
-			{
-				bool clickHitElement = false;
-				// Verifique se o clique colidiu com o elemento focado ou qualquer outro elemento
-				// (Para simplificar, usaremos o getLocalBounds mapeado para o global)
-
-				// Exemplo Simplificado de verificação de acerto:
-				if (focusedElement->getTransform().transformRect(focusedElement->getLocalBounds()).contains(mousePosView))
-				{
-					clickHitElement = true; // Acertou o elemento focado
-				}
-
-				// Se o clique não acertou o elemento focado, e ele ainda está focado, desfoca.
-				if (!clickHitElement)
-				{
-					// Força a perda de foco global
-					gui::FocusElementManager::getInstance().clearFocus();
-				}
-			}
-		}
-	}
-
-	// 3. Lógica de ATIVAÇÃO DO CHAT (Enter)
-
+	// Apenas lógica de comando global que NÃO deve ser tratada pelo Canvas
 }
 
 void SettingsState::updateEvents(sf::Event &sfEvent)
 {
-	updateKeyboardInput(sfEvent);
-
-		// 3. Lógica de ATIVAÇÃO DO CHAT (Enter)
-	if (auto keyPressed = sfEvent.getIf<sf::Event::KeyPressed>()) // Esse tava ali em cima
-	{
-		if (keyPressed->code == sf::Keyboard::Key::Enter)
-		{
-			gui::GuiElement *currentFocus = gui::FocusElementManager::getInstance().getFocusedElement();
-
-			// Situação A: Inicia tudo desfocado. Se clicar Enter, ativa o chat.
-			if (currentFocus == nullptr)
-			{
-				cout << "Current focus NULL e textBox Selected" << endl;
-				// Ativa o TextBox de chat.
-				// O setSelected(true) do chat fará o FocusManager rastreá-lo.
-				textBox->setSelected(true);
-				return; // Consome o evento para evitar outra lógica
-			}
-
-			// Situação B: Se outro elemento GUI (não o chat) estiver focado, nada acontece.
-			// Isso é resolvido pelo chatTextBox.updateEvents:
-			// Se currentFocus != chatTextBox, significa que currentFocus é o TextBox2
-			// e, como m_submitsOnEnter é false para o TextBox2, o Enter é ignorado
-			// dentro do TextBox2::updateEvents (como definido no Passo 1).
-
-			// Se chegamos aqui, o evento já foi consumido por um dos TextBox
-		}
-	}
-
-	for (auto &it : buttons)
-		it.second->updateEvents(sfEvent, mousePosView);
-
-	soundSlider->updateEvents(sfEvent, mousePosView);
-
-	listView->updateEvents(sfEvent, mousePosView);
-
-	select->updateEvents(sfEvent, mousePosView);
-
-	scroll->updateEvents(sfEvent, mousePosView);
-
-	textBox->updateEvents(sfEvent, mousePosView);
-
-	textBox2->updateEvents(sfEvent, mousePosView);
+	if (m_guiCanvas)
+		m_guiCanvas->handleEvent(sfEvent, mousePosView);
 }
 
 void SettingsState::onResizeWindow()
@@ -118,81 +42,64 @@ void SettingsState::onResizeWindow()
 	sf::Vector2f window_center = getWindowCenter();
 	sf::Vector2u window_size = data.window->getSize();
 
-	float gap = 50.f;
+	// float gap = 50.f;
 
-	// Background
-	background.setSize(
-		sf::Vector2f(
-			static_cast<float>(window_size.x),
-			static_cast<float>(window_size.y)));
+	// // Background
+	// background.setSize(
+	// 	sf::Vector2f(
+	// 		static_cast<float>(window_size.x),
+	// 		static_cast<float>(window_size.y)));
 
-	// Buttons
-	buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
-	gui::Button &firstBtn = *buttons["BACK"];
-	buttons["APPLY"]->setPosition({firstBtn.getLeft() - 150.f - gap, window_size.y - 50.f - gap});
+	// // Buttons
+	// buttons["BACK"]->setPosition({window_size.x - 150.f - gap, window_size.y - 50.f - gap});
+	// gui::Button &firstBtn = *buttons["BACK"];
+	// buttons["APPLY"]->setPosition({firstBtn.getLeft() - 150.f - gap, window_size.y - 50.f - gap});
 
-	// Sound Slider
-	float soundTextX = (window_center.x / 2.f) - (soundText.getGlobalBounds().size.x / 2.f);
-	soundText.setPosition({soundTextX, gap});
+	// // Sound Slider
+	// float soundTextX = (window_center.x / 2.f) - (soundText.getGlobalBounds().size.x / 2.f);
+	// soundText.setPosition({soundTextX, gap});
 
-	float soundValueX = (3.f * window_center.x / 2.f);
-	soundValue.setPosition({soundValueX, gap});
+	// float soundValueX = (3.f * window_center.x / 2.f);
+	// soundValue.setPosition({soundValueX, gap});
 
-	float sliderXStart = soundText.getPosition().x + soundText.getGlobalBounds().size.x + gap;
-	float sliderY = gap + (soundText.getGlobalBounds().size.y / 2.f);
-	soundSlider->setPosition({sliderXStart, sliderY});
+	// float sliderXStart = soundText.getPosition().x + soundText.getGlobalBounds().size.x + gap;
+	// float sliderY = gap + (soundText.getGlobalBounds().size.y / 2.f);
+	// soundSlider->setPosition({sliderXStart, sliderY});
 
-	float sliderXEnd = soundValue.getPosition().x - gap;
-	float newWidth = sliderXEnd - sliderXStart;
-	if (newWidth > 0)
-		soundSlider->setSize({newWidth, 16.f});
-}
-
-void SettingsState::updateGui(sf::Time deltaTime) const
-{
-	/* Updates all the gui in the state and handles their functionality */
-	for (auto &it : buttons)
-		it.second->update(deltaTime);
-
-	soundSlider->update(deltaTime);
-	listView->update(deltaTime);
-	select->update(deltaTime);
-	scroll->update(deltaTime);
-	textBox->update(deltaTime);
-	textBox2->update(deltaTime);
+	// float sliderXEnd = soundValue.getPosition().x - gap;
+	// float newWidth = sliderXEnd - sliderXStart;
+	// if (newWidth > 0)
+	// 	soundSlider->setSize({newWidth, 16.f});
 }
 
 void SettingsState::update(sf::Time deltaTime)
 {
 	updateMousePositions();
+	updateKeytime(deltaTime);
 
-	updateGui(deltaTime);
+	if (!this->paused)
+	{
+		// Atualiza a lógica de tempo do Canvas (cursor piscando, animações)
+		if (m_guiCanvas)
+		{
+			m_guiCanvas->handleContinuousMouseInput(mousePosView);
+			m_guiCanvas->update(deltaTime);
+		}
+	}
 
 	debugLinePositionText.setString(std::to_string(mousePosWindow.x) + " " + std::to_string(mousePosWindow.y));
 	// debugLinePositionText.setPosition({mousePosWindow.x + 6.f, mousePosWindow.y - 20.f});
-}
-
-void SettingsState::renderGui(sf::RenderTarget &target) const
-{
-	for (auto &it : buttons)
-		target.draw(*it.second);
-
-	target.draw(soundText);
-	target.draw(soundValue);
-	target.draw(*soundSlider);
-
-	target.draw(*listView);
-	target.draw(*select);
-	target.draw(*scroll);
-	target.draw(*textBox);
-	target.draw(*textBox2);
 }
 
 void SettingsState::render(sf::RenderTarget &target)
 {
 	target.draw(background);
 
-	renderGui(target);
+	target.draw(soundText);
+	target.draw(soundValue);
+
+	if (m_guiCanvas)
+		m_guiCanvas->draw(target);
 
 	sf::Vertex verticalLine[2];
 	verticalLine[0].position = sf::Vector2f(mousePosView.x, 0.f);
@@ -236,25 +143,24 @@ void SettingsState::initKeybinds()
 
 void SettingsState::initGui()
 {
-	buttons["BACK"] = std::make_unique<gui::Button>(
+	m_guiCanvas = std::make_unique<gui::Canvas>();
+
+	auto btnBack = std::make_unique<gui::Button>(
 		sf::Vector2f(100.f, 100.f),
 		sf::Vector2f(150.f, 50.f),
 		&font, "Back", 32);
 
-	buttons["APPLY"] = std::make_unique<gui::Button>(
+	btnBack->onPressed([this]
+					   { endState(); });
+
+	m_guiCanvas->addElement(std::move(btnBack));
+
+	auto btnApply = std::make_unique<gui::Button>(
 		sf::Vector2f(100.f, 200.f),
 		sf::Vector2f(150.f, 50.f),
 		&font, "Apply", 32);
 
-	// Button functionality
-	// Quit the game
-	buttons["BACK"]->onPressed([this]
-							   { endState(); });
-
-	/*std::vector<std::string> modes_str;
-	for (auto& i : modes) {
-		modes_str.push_back(std::to_string(i.width) + 'x' + std::to_string(i.height));
-	}*/
+	m_guiCanvas->addElement(std::move(btnApply));
 
 	// SOUND ====================================
 	soundText.setFillColor(sf::Color::Black);
@@ -262,14 +168,25 @@ void SettingsState::initGui()
 	soundText.setString("Sound:");
 	soundText.setFont(font);
 
-	soundSlider = std::make_unique<gui::Slider>(sf::Vector2f(100.f, 100.f), sf::Vector2f(250.f, 16.f), 0, 100, 50);
+	float soundTextX = (300.f) - (soundText.getGlobalBounds().size.x / 2.f);
+	soundText.setPosition({soundTextX, 10.f});
+
+	float soundValueX = (3.f * 300.f);
+	soundValue.setPosition({soundValueX, 10.f});
+
+	auto soundSlider = std::make_unique<gui::Slider>(sf::Vector2f(100.f, 100.f), sf::Vector2f(250.f, 16.f), 0, 100, 50);
+
+	m_soundSlider = soundSlider.get();
+
 	soundSlider->onValueChange(
 		[this]
-		{ soundValue.setString(std::to_string(soundSlider->getValue()) + "%"); });
+		{ soundValue.setString(std::to_string(m_soundSlider->getValue()) + "%"); });
+
+	m_guiCanvas->addElement(std::move(soundSlider));
 
 	soundValue.setFillColor(sf::Color::Black);
 	soundValue.setCharacterSize(32);
-	soundValue.setString(std::to_string(soundSlider->getValue()) + "%");
+	soundValue.setString(std::to_string(m_soundSlider->getValue()) + "%");
 	soundValue.setFont(font);
 
 	// LIST VIEW ====================================
@@ -285,15 +202,21 @@ void SettingsState::initGui()
 	float itemHeight = 60.0f;
 	auto produtoAdapter = std::make_unique<gui::ListViewAdapter<Example, ExampleListViewItem>>(std::move(todosOsProdutos), font, itemHeight);
 
-	listView = std::make_unique<gui::ListView>(sf::Vector2f(200.f, 200.f), sf::Vector2f(200.f, 300.f), std::move(produtoAdapter));
+	auto listView = std::make_unique<gui::ListView>(sf::Vector2f(300.f, 200.f), sf::Vector2f(200.f, 300.f), std::move(produtoAdapter));
+	m_guiCanvas->addElement(std::move(listView));
 
 	// SELECT ====================================
-	select = std::make_unique<gui::Select>(sf::Vector2f(500.f, 400.f), sf::Vector2f(200.f, 100.f));
+	// auto select = std::make_unique<gui::Select>(sf::Vector2f(500.f, 400.f), sf::Vector2f(200.f, 100.f));
+	// m_guiCanvas->addElement(std::move(select));
 
 	// SCROLL ====================================
-	scroll = std::make_unique<gui::Scroll>(sf::Vector2f(800.f, 200.f), sf::Vector2f(20.f, 200.f));
+	auto scroll = std::make_unique<gui::Scroll>(sf::Vector2f(800.f, 200.f), sf::Vector2f(20.f, 200.f));
+	m_guiCanvas->addElement(std::move(scroll));
 
-	textBox = std::make_unique<gui::TextBox>(sf::Vector2f(100.f, 600.f), sf::Vector2f(400.f, 20.f));
+	auto textBox = std::make_unique<gui::TextBox>(sf::Vector2f(100.f, 600.f), sf::Vector2f(400.f, 20.f));
+	textBox->setAsPrimaryFocusTarget(true, sf::Keyboard::Key::T);
+	m_guiCanvas->addElement(std::move(textBox));
 
-	textBox2 = std::make_unique<gui::TextBox>(sf::Vector2f(500.f, 200.f), sf::Vector2f(200.f, 20.f));
+	auto textBox2 = std::make_unique<gui::TextBox>(sf::Vector2f(500.f, 150.f), sf::Vector2f(200.f, 20.f));
+	m_guiCanvas->addElement(std::move(textBox2));
 }

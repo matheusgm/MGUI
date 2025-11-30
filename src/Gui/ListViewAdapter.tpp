@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./IListViewAdapter.hpp"
+#include "Interfaces/IListViewAdapter.hpp"
 #include <vector>
 #include <type_traits>
 

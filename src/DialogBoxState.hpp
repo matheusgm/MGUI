@@ -1,9 +1,8 @@
 #pragma once
 
 #include "State.hpp"
-#include "Gui/DialogBox.hpp"
+#include "Gui/Canvas.hpp"
 #include "Gui/DialogTree.hpp"
-#include "Gui/Button.hpp"
 
 class DialogBoxState : public State
 {
@@ -14,19 +13,15 @@ public:
     void updateKeyboardInput(sf::Event &event) override;
     void updateEvents(sf::Event &event) override;
     void onResizeWindow() override;
-    void updateGui(sf::Time deltaTime) const;
     void update(sf::Time deltaTime) override;
-    void renderGui(sf::RenderTarget &target) const;
     void render(sf::RenderTarget &target) override;
 
 private:
     sf::RectangleShape background;
 
-    std::map<std::string, std::unique_ptr<gui::Button>> buttons;
+    std::unique_ptr<gui::Canvas> m_guiCanvas;
 
-    // Dialog Box
     std::unique_ptr<gui::DialogTree> dialogTree;
-    std::unique_ptr<gui::DialogBox> dialogBox;
 
     // std::vector<sf::VideoMode> modes;
 

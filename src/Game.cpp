@@ -51,6 +51,7 @@ void Game::update()
 
 		if (states.top()->getQuit())
 		{
+			gui::FocusElementManager::getInstance().clearFocus(); 
 			states.top()->endState();
 			states.pop();
 			if (!states.empty())

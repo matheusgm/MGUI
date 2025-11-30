@@ -11,7 +11,7 @@ gui::Button::Button(sf::Vector2f position, sf::Vector2f size,
 					short unsigned id) : GuiElement(position),
 										 text(loadFont(font), textStr),
 										 buttonState(ButtonState::NORMAL),
-										 id(id),
+										 m_isDisabled(false),
 										 textNormalColor(textNormal),
 										 textHoverColor(textHover),
 										 textPressedColor(textPressed),
@@ -37,58 +37,100 @@ gui::Button::Button(sf::Vector2f position, sf::Vector2f size,
 	setText(textStr);
 }
 
-void gui::Button::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
+void gui::Button::update(sf::Time deltaTime)
 {
-	if (buttonState == ButtonState::DISABLED)
+}
+
+void gui::Button::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
+{
+	if (m_isDisabled || m_isPressed)
 		return;
 
 	bool hovered = isHovered(mousePos);
 
-	// Check MouseButtonPressed
-	if (auto mousePressed = sfEvent.getIf<sf::Event::MouseButtonPressed>())
+	if (hovered)
 	{
-		if (mousePressed->button == sf::Mouse::Button::Left && hovered)
+		if (buttonState != ButtonState::HOVER)
 		{
-			buttonState = ButtonState::PRESSED;
-			buttonPressed = true;
-			return;
+			buttonState = ButtonState::HOVER;
+			updateVisualState();
 		}
 	}
-
-	// Check MouseButtonReleased
-	if (auto mouseReleased = sfEvent.getIf<sf::Event::MouseButtonReleased>())
+	else if (buttonState == ButtonState::HOVER)
 	{
-		if (mouseReleased->button == sf::Mouse::Button::Left && buttonPressed)
-		{
-			buttonPressed = false;
-
-			if (hovered)
-			{
-				onPressedCallback();
-				buttonState = ButtonState::HOVER;
-			}else{
-				buttonState = ButtonState::NORMAL;
-			}
-			return;
-		}
+		buttonState = m_isFocused ? ButtonState::FOCUSED : ButtonState::NORMAL;
+		updateVisualState();
 	}
-
-	if (!buttonPressed)
-    {
-        if (hovered)
-        {
-             if (buttonState != ButtonState::HOVER)
-                buttonState = ButtonState::HOVER;
-        }
-        else
-        {
-            if (buttonState != ButtonState::NORMAL)
-                buttonState = ButtonState::NORMAL;
-        }
-    }
 }
 
-void gui::Button::update(sf::Time deltaTime)
+sf::FloatRect gui::Button::getLocalBounds() const
+{
+	return shape.getLocalBounds();
+}
+
+void gui::Button::executeClickAction()
+{
+	if (m_isDisabled)
+		return;
+
+	cout << "Action" << endl;
+	onPressedCallback();
+}
+
+void gui::Button::setPressedState(bool pressed, const sf::Vector2f &mousePos)
+{
+	m_isPressed = pressed;
+	if (m_isDisabled)
+		return;
+
+	if (pressed)
+		buttonState = ButtonState::PRESSED;
+	else
+	{
+		if (isHovered(mousePos))
+			buttonState = m_isFocused ? ButtonState::FOCUSED : ButtonState::HOVER;
+		else
+			buttonState = m_isFocused ? ButtonState::FOCUSED : ButtonState::NORMAL;
+	}
+	updateVisualState();
+}
+
+void gui::Button::setText(const std::string &textStr)
+{
+	text.setString(textStr);
+	auto bounds = text.getLocalBounds();
+	text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
+	text.setPosition({shape.getSize().x / 2.f, shape.getSize().y / 2.f});
+}
+
+void gui::Button::setDisabled(bool disable)
+{
+	m_isDisabled = disable;
+
+	buttonState = disable ? ButtonState::DISABLED : ButtonState::NORMAL;
+	updateVisualState();
+}
+
+void gui::Button::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
+	states.transform *= getTransform();
+
+	target.draw(shape, states);
+	target.draw(text, states);
+}
+
+// bool gui::Button::isHovered(const sf::Vector2f &mousePos) const
+// {
+// 	sf::FloatRect boundsSpace = getTransform().transformRect(shape.getLocalBounds());
+
+// 	return boundsSpace.contains(mousePos);
+// }
+
+void gui::Button::centerText()
+{
+}
+
+void gui::Button::updateVisualState()
 {
 	switch (buttonState)
 	{
@@ -107,6 +149,11 @@ void gui::Button::update(sf::Time deltaTime)
 		text.setFillColor(textPressedColor);
 		shape.setOutlineColor(outlinePressedColor);
 		break;
+	case ButtonState::FOCUSED:
+		shape.setFillColor(normalColor);
+		text.setFillColor(textNormalColor);
+		shape.setOutlineColor(sf::Color::Blue);
+		break;
 	case ButtonState::DISABLED:
 		shape.setFillColor(disabledColor);
 		text.setFillColor(textDisabledColor);
@@ -118,39 +165,6 @@ void gui::Button::update(sf::Time deltaTime)
 		shape.setOutlineColor(sf::Color::Green);
 		break;
 	}
-}
-
-sf::FloatRect gui::Button::getLocalBounds() const
-{
-	return shape.getLocalBounds();
-}
-
-void gui::Button::setText(const std::string &textStr)
-{
-	text.setString(textStr);
-	auto bounds = text.getLocalBounds();
-	text.setOrigin({bounds.position.x + bounds.size.x / 2.f, bounds.position.y + bounds.size.y / 2.f});
-	text.setPosition({shape.getSize().x / 2.f, shape.getSize().y / 2.f});
-}
-
-void gui::Button::setDisabled(bool disable)
-{
-	buttonState = disable ? ButtonState::DISABLED : ButtonState::NORMAL;
-}
-
-void gui::Button::draw(sf::RenderTarget &target, sf::RenderStates states) const
-{
-	states.transform *= this->getTransform();
-
-	target.draw(shape, states);
-	target.draw(text, states);
-}
-
-bool gui::Button::isHovered(const sf::Vector2f &mousePos) const
-{
-	sf::FloatRect boundsSpace = getTransform().transformRect(shape.getLocalBounds());
-
-	return boundsSpace.contains(mousePos);
 }
 
 sf::Font &gui::Button::loadFont(sf::Font *font)

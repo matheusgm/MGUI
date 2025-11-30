@@ -2,7 +2,7 @@
 
 #include "SettingsState.hpp"
 #include "DialogBoxState.hpp"
-#include "Gui/Button.hpp"
+#include "Gui/Canvas.hpp"
 
 class MainMenuState : public State
 {
@@ -13,15 +13,13 @@ public:
     void updateKeyboardInput(sf::Event &event) override;
     void updateEvents(sf::Event &event) override;
     void onResizeWindow() override;
-    void updateGui(sf::Time deltaTime) const;
     void update(sf::Time deltaTime) override;
-    void renderGui(sf::RenderTarget &target) const;
     void render(sf::RenderTarget &target) override;
 
 private:
     sf::RectangleShape background;
 
-    std::map<std::string, std::unique_ptr<gui::Button>> buttons;
+    std::unique_ptr<gui::Canvas> m_guiCanvas;
 
     void initKeybinds();
     void initGui();

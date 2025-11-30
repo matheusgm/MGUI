@@ -47,47 +47,20 @@ gui::Scroll::Scroll(sf::Vector2f position, sf::Vector2f size)
 	updateIndicatorPosition();
 }
 
-void gui::Scroll::updateEvents(sf::Event &sfEvent, const sf::Vector2f &mousePos)
+void gui::Scroll::handleMouseInput(sf::Event event, const sf::Vector2f &mousePos)
 {
 	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
 
-	buttonUp->updateEvents(sfEvent, scrollLocalMousePos);
-	buttonDown->updateEvents(sfEvent, scrollLocalMousePos);
+	// cout << "X: " << mousePos.x << " Y: " << mousePos.y << endl;
 
-	sf::Transform indicatorTotalTransform = getTransform() * indicatorShape.getTransform();
-	sf::FloatRect indicatorGlobalBounds = indicatorTotalTransform.transformRect(indicatorShape.getLocalBounds());
+	buttonUp->handleMouseInput(event, scrollLocalMousePos);
+	buttonDown->handleMouseInput(event, scrollLocalMousePos);
 
-	if (indicatorGlobalBounds.contains(mousePos))
-	{
-		if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseButtonPressed>())
-		{
-			if (mouseEvent->button == sf::Mouse::Button::Left)
-			{
-				indicatorPressed = true;
-				sf::Vector2f indicatorTopGlobal = getTransform().transformPoint(
-					indicatorShape.getPosition());
+	if (m_thumbPressed)
+		handleDrag(scrollLocalMousePos);
 
-				dragOffsetY = mousePos.y - indicatorTopGlobal.y;
-			}
-		}
-	}
-
-	if (indicatorPressed)
-	{
-		if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseButtonReleased>())
-		{
-			if (mouseEvent->button == sf::Mouse::Button::Left)
-				indicatorPressed = false;
-		}
-		else if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseMoved>())
-			handleDrag(mousePos);
-	}
-
-	if (auto mouseEvent = sfEvent.getIf<sf::Event::MouseWheelScrolled>())
-	{
-		if (contains(mousePos))
-			scrollWheel(static_cast<int>(mouseEvent->delta));
-	}
+	// 3. Lógica do HOVER na Calha (Opcional)
+	// Se quiser que a calha mude de cor ao passar o mouse.
 }
 
 void gui::Scroll::update(sf::Time deltaTime)
@@ -98,13 +71,71 @@ void gui::Scroll::update(sf::Time deltaTime)
 
 sf::FloatRect gui::Scroll::getLocalBounds() const
 {
-	sf::FloatRect shapeArea = shape.getTransform().transformRect(shape.getLocalBounds());
 	sf::FloatRect buttonUpArea = buttonUp->getTransform().transformRect(buttonUp->getLocalBounds());
+	sf::FloatRect shapeArea = shape.getTransform().transformRect(shape.getLocalBounds());
 	sf::FloatRect buttonDownArea = buttonDown->getTransform().transformRect(buttonDown->getLocalBounds());
 
 	sf::FloatRect combinedBounds = RectUnion(shapeArea, buttonUpArea);
 
 	return RectUnion(combinedBounds, buttonDownArea);
+}
+
+void gui::Scroll::setPressedState(bool pressed, const sf::Vector2f &mousePos)
+{
+	sf::Vector2f scrollLocalMousePos = mapGlobalToLocal(mousePos);
+
+	GuiElement *childUnderMouse = findChildAt(scrollLocalMousePos);
+
+	if (pressed)
+	{
+		if (childUnderMouse)
+		{
+			if (IPressable *pressableChild = dynamic_cast<IPressable *>(childUnderMouse))
+			{
+				pressableChild->setPressedState(true, scrollLocalMousePos);
+				m_pressedChild = childUnderMouse;
+				return;
+			}
+		}
+
+		sf::FloatRect indicatorLocalBounds = indicatorShape.getTransform().transformRect(indicatorShape.getLocalBounds());
+
+		if (indicatorLocalBounds.contains(scrollLocalMousePos))
+		{
+			m_isPressed = true;
+			m_thumbPressed = true;
+			dragOffsetY = scrollLocalMousePos.y - indicatorShape.getPosition().y;
+			return;
+		}
+
+		// --- 3. Calha (Track) ---
+		// Se não foi Thumb nem Button, o Scroll (Track) pode ser considerado pressionado.
+		m_isPressed = true;
+		// ... (Lógica para rolar uma página, se aplicável)
+	}
+	else
+	{
+		if (m_pressedChild)
+		{
+			if (childUnderMouse == m_pressedChild)
+			{
+				if (IClickable *clickableChild = dynamic_cast<IClickable *>(m_pressedChild))
+					clickableChild->executeClickAction();
+			}
+
+			if (IPressable *pressableChild = dynamic_cast<IPressable *>(m_pressedChild))
+				pressableChild->setPressedState(false, scrollLocalMousePos);
+		}
+
+		// Reseta todos os estados
+		m_isPressed = false;
+		m_thumbPressed = false;
+		dragOffsetY = 0.0f;
+		m_pressedChild = nullptr;
+
+		buttonUp->setPressedState(false, scrollLocalMousePos);
+		buttonDown->setPressedState(false, scrollLocalMousePos);
+	}
 }
 
 void gui::Scroll::scrollWheel(int delta)
@@ -189,12 +220,9 @@ void gui::Scroll::updateIndicatorPosition()
 
 void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 {
-	sf::Vector2f scrollGlobalPos = getPosition();
 	float btnUpSizeY = getButtonUpHeight();
 	sf::Vector2f indicatorSize = indicatorShape.getSize();
 
-	// Início da área de rolagem livre (Global)
-	float trackTopGlobal = scrollGlobalPos.y + btnUpSizeY;
 	// Altura da área de rolagem livre
 	float trackHeight = getTrackHeight();
 
@@ -202,9 +230,9 @@ void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 	// Topo do Indicador Desejado = Mouse Y - Offset (distância do clique ao topo)
 	float indicatorTopDesired = mousePos.y - dragOffsetY;
 
-	float topLimit = trackTopGlobal;
+	float topLimit = btnUpSizeY;
 
-	float bottomLimit = trackTopGlobal + trackHeight - indicatorSize.y;
+	float bottomLimit = btnUpSizeY + trackHeight - indicatorSize.y;
 
 	float clampedTopY = std::clamp(indicatorTopDesired, topLimit, bottomLimit);
 
@@ -228,4 +256,15 @@ void gui::Scroll::handleDrag(const sf::Vector2f &mousePos)
 		if (onValueChangeCallback)
 			onValueChangeCallback();
 	}
+}
+
+gui::GuiElement *gui::Scroll::findChildAt(const sf::Vector2f &mousePos)
+{
+	if (buttonDown->contains(mousePos))
+		return buttonDown.get();
+
+	if (buttonUp->contains(mousePos))
+		return buttonUp.get();
+
+	return nullptr;
 }
