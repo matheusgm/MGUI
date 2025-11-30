@@ -73,7 +73,6 @@ void gui::Button::executeClickAction()
 	if (m_isDisabled)
 		return;
 
-	cout << "Action" << endl;
 	onPressedCallback();
 }
 

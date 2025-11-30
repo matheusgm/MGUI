@@ -90,7 +90,6 @@ void gui::DialogBox::setPressedState(bool pressed, const sf::Vector2f &mousePos)
 		{
 			if (childUnderMouse == m_pressedChild)
 			{
-				cout << "CLicked" << endl;
 				if (IClickable *clickableChild = dynamic_cast<IClickable *>(m_pressedChild))
 					clickableChild->executeClickAction();
 			}
