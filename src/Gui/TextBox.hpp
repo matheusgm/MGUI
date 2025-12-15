@@ -55,6 +55,7 @@ namespace gui
         sf::Clock m_cursorClock;
         float m_cursorBlinkRate = 0.5f;
         bool m_showCursor = false;
+        std::size_t m_cursorIndex = 0;
 
         bool m_isFocused = false;
         bool m_isPressed = false;
@@ -69,7 +70,7 @@ namespace gui
         static std::unique_ptr<sf::Font> defaultFont;
 
         void handleTextEnteredEvent(const sf::Event::TextEntered &textEvent);
-        void updateVisualState();
+        void updateCursorVisualPosition();
         void positionCursor(const sf::Vector2f &localMousePos);
         void updateTextSelection(const sf::Vector2f &localMousePos);
         void alignText();

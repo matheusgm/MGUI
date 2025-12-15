@@ -23,8 +23,6 @@ void gui::Canvas::update(sf::Time deltaTime)
 void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
 {
     // 1. TRATAMENTO DE FOCO E TECLADO
-    // O FocusManager deve ser o primeiro a lidar com input de teclado (IKeyboardInput)
-
     if (auto keyPressed = sfEvent.getIf<sf::Event::KeyPressed>())
     {
         if (m_focusManager->getFocusedElement() == nullptr)
@@ -34,7 +32,6 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
             {
                 m_focusManager->setFocusElement(textBoxToFocus);
 
-                // ANULAR o evento TextEntered
                 m_ignoreNextTextEntered = true;
                 return;
             }
@@ -48,6 +45,7 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
             m_ignoreNextTextEntered = false;
             return;
         }
+
         if (m_focusManager->handleKeyboardInput(sfEvent))
             resetFocus();
 
@@ -76,7 +74,6 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
             if (IPressable *pressable = dynamic_cast<IPressable *>(elementUnderMouse))
                 pressable->setPressedState(true, mousePos);
 
-            // Rastreia o elemento para o MouseReleased.
             m_pressedElement = elementUnderMouse;
         }
     }
@@ -94,25 +91,12 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
             }
         }
 
-        // 3. Limpa o rastreamento
         m_pressedElement = nullptr;
     }
 
     // 4. TRATAMENTO CONTÍNUO (MouseMoved)
-    // O MouseMoved não dispara ações discretas, apenas prepara o estado de HOVER/DRAG.
     if (sfEvent.getIf<sf::Event::MouseMoved>())
     {
-        // Este evento é o que dispara handleMouseInput() em todos os GuiElements
-        // que precisam de HOVER.
-        // No entanto, é mais eficiente chamá-lo no método Canvas::update()
-        // ou após o loop de eventos, garantindo que o estado de HOVER/DRAG
-        // seja atualizado em todos os frames, e não apenas quando o mouse se move.
-        //
-        // Se você não o mover para o update(), você pode chamá-lo aqui:
-        // handleMouseInputForAllElements(mousePos);
-
-        // for (auto &element : m_elements)
-        //     element->handleMouseInput(sfEvent, mousePos);
         if (m_pressedElement)
             m_pressedElement->handleMouseInput(sfEvent, mousePos);
     }
@@ -164,34 +148,16 @@ void gui::Canvas::resetFocus()
     m_focusManager->clearFocus();
 }
 
-void gui::Canvas::checkFocusChange(const sf::Vector2f &mousePos)
-{
-    GuiElement *newFocus = nullptr;
-
-    for (auto it = m_elements.rbegin(); it != m_elements.rend(); ++it)
-    {
-        // if ((*it)->isFocusable() && (*it)->contains(mousePos))
-        // {
-        //     newFocus = it->get();
-        //     break;
-        // }
-    }
-
-    if (newFocus)
-        m_focusManager->setFocusElement(newFocus);
-    else
-        resetFocus();
-}
-
 gui::GuiElement *gui::Canvas::findElementAt(const sf::Vector2f &mousePos)
 {
-    // Itera sobre os elementos DE TRÁS PARA FRENTE (Z-order) para encontrar o elemento mais acima.
     for (auto it = m_elements.rbegin(); it != m_elements.rend(); ++it)
     {
         GuiElement *element = it->get();
+        
         if (element->contains(mousePos))
             return element;
     }
+
     return nullptr;
 }
 

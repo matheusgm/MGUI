@@ -33,6 +33,5 @@ namespace gui
 
         GuiElement *findElementAt(const sf::Vector2f &mousePos);
         TextBox *findPreferredTextBoxToFocus();
-        void checkFocusChange(const sf::Vector2f &mousePos);
     };
 }

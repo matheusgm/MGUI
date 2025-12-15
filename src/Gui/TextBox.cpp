@@ -81,7 +81,7 @@ void gui::TextBox::onFocusChanged(bool focused)
         m_showCursor = false;
     }
 
-    updateVisualState();
+    updateCursorVisualPosition();
 }
 
 void gui::TextBox::setPressedState(bool pressed, const sf::Vector2f &mousePos)
@@ -124,7 +124,60 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
 
             return true;
         }
-        // ... Lógica para setas (Left/Right), Home, End, etc.
+
+        if (keyPressed->code == sf::Keyboard::Key::Left)
+        {
+            if (m_cursorIndex > 0)
+            {
+                m_cursorIndex--;
+                updateCursorVisualPosition();
+                m_cursorClock.restart();
+                m_showCursor = true;
+            }
+            return false;
+        }
+
+        if (keyPressed->code == sf::Keyboard::Key::Right)
+        {
+            if (m_cursorIndex < m_inputString.size())
+            {
+                m_cursorIndex++;
+                updateCursorVisualPosition();
+                m_cursorClock.restart();
+                m_showCursor = true;
+            }
+            return false;
+        }
+
+        if (keyPressed->code == sf::Keyboard::Key::Home)
+        {
+            m_cursorIndex = 0;
+            updateCursorVisualPosition();
+            m_cursorClock.restart();
+            m_showCursor = true;
+            return false;
+        }
+
+        if (keyPressed->code == sf::Keyboard::Key::End)
+        {
+            m_cursorIndex = m_inputString.size();
+            updateCursorVisualPosition();
+            m_cursorClock.restart();
+            m_showCursor = true;
+            return false;
+        }
+
+        if (keyPressed->code == sf::Keyboard::Key::Delete)
+        {
+            if (m_cursorIndex < m_inputString.size())
+            {
+                m_inputString.erase(m_cursorIndex, 1);
+                m_text.setString(m_inputString);
+                alignText();
+                updateCursorVisualPosition();
+            }
+            return false;
+        }
     }
 
     return false;
@@ -150,8 +203,14 @@ void gui::TextBox::handleTextEnteredEvent(const sf::Event::TextEntered &textEven
 
     if (unicode == 8) // Backspace
     {
-        if (!m_inputString.empty())
-            m_inputString.pop_back();
+        if (m_cursorIndex > 0)
+        {
+            m_inputString.erase(m_cursorIndex - 1, 1);
+            m_cursorIndex--;
+            m_text.setString(m_inputString);
+            alignText();
+            updateCursorVisualPosition();
+        }
     }
     else if (unicode == 13 || unicode == 27) // Ignora Enter (13) e Escape (27)
     {
@@ -160,21 +219,52 @@ void gui::TextBox::handleTextEnteredEvent(const sf::Event::TextEntered &textEven
     else if (unicode >= 32 && unicode <= 126) // Caracteres imprimíveis
     {
         if (m_inputString.size() < MAX_CHARS)
-            m_inputString += static_cast<char>(unicode);
+        {
+            m_inputString.insert(m_cursorIndex, 1, static_cast<char>(unicode));
+            m_cursorIndex++;
+            m_text.setString(m_inputString);
+            alignText();
+            updateCursorVisualPosition();
+        }
     }
 
-    // Reseta o relógio e mostra o cursor após a entrada de texto
     m_showCursor = true;
     m_cursorClock.restart();
-    updateText();
 }
 
-void gui::TextBox::updateVisualState()
+void gui::TextBox::updateCursorVisualPosition()
 {
+    sf::Vector2f charPos = m_text.findCharacterPos(m_cursorIndex);
+
+    float cursorX = charPos.x;
+    float cursorY = std::floor(m_background.getSize().y / 2.f - m_cursor.getSize().y / 2.f);
+
+    m_cursor.setPosition({cursorX, cursorY});
 }
 
 void gui::TextBox::positionCursor(const sf::Vector2f &localMousePos)
 {
+    float minDiff = __FLT_MAX__;
+    std::size_t newIndex = 0;
+
+    for (std::size_t i = 0; i <= m_inputString.size(); ++i)
+    {
+        sf::Vector2f charPos = m_text.findCharacterPos(i);
+
+        float diff = std::abs(localMousePos.x - charPos.x);
+
+        if (diff < minDiff)
+        {
+            minDiff = diff;
+            newIndex = i;
+        }
+    }
+
+    m_cursorIndex = newIndex;
+    updateCursorVisualPosition();
+
+    m_showCursor = true;
+    m_cursorClock.restart();
 }
 
 void gui::TextBox::updateTextSelection(const sf::Vector2f &localMousePos)
@@ -184,21 +274,10 @@ void gui::TextBox::updateTextSelection(const sf::Vector2f &localMousePos)
 void gui::TextBox::alignText()
 {
     auto bounds = m_text.getLocalBounds();
-    m_text.setOrigin({0.f, bounds.position.y + bounds.size.y / 2.f});
+    float originY = std::floor(bounds.position.y + bounds.size.y / 2.f);
+    m_text.setOrigin({0.f, originY});
 
-    m_text.setPosition({5.f, m_background.getSize().y / 2.f});
-
-    sf::Vector2f cursorPosition;
-    if (m_inputString.empty())
-    {
-        cursorPosition = m_text.getPosition();
-    }
-    else
-    {
-        cursorPosition = m_text.findCharacterPos(m_inputString.size());
-    }
-
-    m_cursor.setPosition({cursorPosition.x, m_background.getSize().y / 2.f - m_cursor.getSize().y / 2.f});
+    m_text.setPosition({5.f, std::floor(m_background.getSize().y / 2.f)});
 }
 
 void gui::TextBox::updateText()
