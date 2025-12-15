@@ -45,7 +45,8 @@ void gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
     {
         if (IKeyboardInput *keyboardInput = dynamic_cast<IKeyboardInput *>(m_focusedElement))
         {
-            if(keyboardInput->handleKeyboardInput(sfEvent))
+            KeyboardInputResult result = keyboardInput->handleKeyboardInput(sfEvent);
+            if (result == KeyboardInputResult::Submit || result == KeyboardInputResult::Cancel)
                 clearFocus();
         }
     }

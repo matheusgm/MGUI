@@ -102,7 +102,7 @@ void gui::TextBox::setPressedState(bool pressed, const sf::Vector2f &mousePos)
     }
 }
 
-bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
+gui::KeyboardInputResult gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
 {
     if (auto textEntered = sfEvent.getIf<sf::Event::TextEntered>())
         handleTextEnteredEvent(*textEntered);
@@ -114,7 +114,7 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
             if (onTextCanceled)
                 onTextCanceled();
 
-            return true;
+            return KeyboardInputResult::Cancel;
         }
 
         if (keyPressed->code == activationKey)
@@ -122,7 +122,7 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
             if (onTextSubmitted)
                 onTextSubmitted(m_inputString);
 
-            return true;
+            return KeyboardInputResult::Submit;
         }
 
         if (keyPressed->code == sf::Keyboard::Key::Left)
@@ -134,7 +134,7 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
                 m_cursorClock.restart();
                 m_showCursor = true;
             }
-            return false;
+            return KeyboardInputResult::Handled;
         }
 
         if (keyPressed->code == sf::Keyboard::Key::Right)
@@ -146,7 +146,7 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
                 m_cursorClock.restart();
                 m_showCursor = true;
             }
-            return false;
+            return KeyboardInputResult::Handled;
         }
 
         if (keyPressed->code == sf::Keyboard::Key::Home)
@@ -155,7 +155,7 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
             updateCursorVisualPosition();
             m_cursorClock.restart();
             m_showCursor = true;
-            return false;
+            return KeyboardInputResult::Handled;
         }
 
         if (keyPressed->code == sf::Keyboard::Key::End)
@@ -164,7 +164,7 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
             updateCursorVisualPosition();
             m_cursorClock.restart();
             m_showCursor = true;
-            return false;
+            return KeyboardInputResult::Handled;
         }
 
         if (keyPressed->code == sf::Keyboard::Key::Delete)
@@ -176,11 +176,11 @@ bool gui::TextBox::handleKeyboardInput(const sf::Event &sfEvent)
                 alignText();
                 updateCursorVisualPosition();
             }
-            return false;
+            return KeyboardInputResult::Handled;
         }
     }
 
-    return false;
+    return KeyboardInputResult::Ignored;
 }
 
 void gui::TextBox::draw(sf::RenderTarget &target, sf::RenderStates states) const
