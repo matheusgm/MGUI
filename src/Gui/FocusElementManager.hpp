@@ -12,7 +12,7 @@ namespace gui
         void setFocusElement(GuiElement *element);
         void clearFocus();
 
-        bool handleKeyboardInput(const sf::Event &sfEvent);
+        void handleKeyboardInput(const sf::Event &sfEvent);
 
         void registerElement(GuiElement *element);   // Se for usar TAB
         void unregisterElement(GuiElement *element); // Se for usar TAB

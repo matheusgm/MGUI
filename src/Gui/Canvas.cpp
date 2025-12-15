@@ -46,8 +46,7 @@ void gui::Canvas::handleEvent(sf::Event &sfEvent, const sf::Vector2f &mousePos)
             return;
         }
 
-        if (m_focusManager->handleKeyboardInput(sfEvent))
-            resetFocus();
+        m_focusManager->handleKeyboardInput(sfEvent);
 
         return;
     }
@@ -153,7 +152,7 @@ gui::GuiElement *gui::Canvas::findElementAt(const sf::Vector2f &mousePos)
     for (auto it = m_elements.rbegin(); it != m_elements.rend(); ++it)
     {
         GuiElement *element = it->get();
-        
+
         if (element->contains(mousePos))
             return element;
     }

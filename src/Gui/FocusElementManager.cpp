@@ -39,15 +39,14 @@ void gui::FocusElementManager::clearFocus()
     }
 }
 
-bool gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
+void gui::FocusElementManager::handleKeyboardInput(const sf::Event &sfEvent)
 {
     if (m_focusedElement != nullptr)
     {
         if (IKeyboardInput *keyboardInput = dynamic_cast<IKeyboardInput *>(m_focusedElement))
         {
-            return keyboardInput->handleKeyboardInput(sfEvent);
+            if(keyboardInput->handleKeyboardInput(sfEvent))
+                clearFocus();
         }
     }
-
-    return false;
 }
